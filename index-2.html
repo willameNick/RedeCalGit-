@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RedeCalc Pro GPS</title>
+<meta name="theme-color" content="#f97316">
+<link rel="manifest" href="manifest.webmanifest">
+<style>
+:root{--bg:#07111f;--card:#101c30;--card2:#1b2d47;--text:#f8fafc;--muted:#a7b4c6;--accent:#fb923c;--green:#22c55e;--line:#2b405f;--red:#ef4444;--blue:#38bdf8;--yellow:#facc15}
+*{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:radial-gradient(circle at top,#1e3a5f,#0b1220 45%);color:var(--text);max-width:430px;margin:auto;min-height:100vh}
+.app{padding:18px 16px 96px}.screen{display:none}.screen.active{display:block}
+h1,h2,h3{margin:0}h1{font-size:25px}h2{font-size:21px;margin-bottom:12px}h3{font-size:16px}p{line-height:1.35}.muted{color:var(--muted);font-size:13px}.tiny{color:var(--muted);font-size:12px}
+.card{background:linear-gradient(180deg,var(--card),#0d1626);border:1px solid var(--line);border-radius:22px;padding:15px;margin-bottom:13px;box-shadow:0 10px 28px rgba(0,0,0,.22)}.hero{background:linear-gradient(135deg,#fb923c,#22c55e);color:#07111f;border:0}.metric{display:grid;grid-template-columns:1fr 1fr;gap:8px}.metricBox{background:#0b1728;border:1px solid var(--line);border-radius:16px;padding:10px}.metricBox strong{display:block;font-size:18px;color:#fff}.chip{display:inline-block;padding:5px 8px;border-radius:999px;background:#0b1728;border:1px solid var(--line);font-size:12px;margin:3px 3px 0 0}.groundBadge{color:#86efac;font-weight:bold}
+.row{display:flex;align-items:center;justify-content:space-between;gap:10px}.badge{padding:5px 9px;border-radius:999px;background:#122d1d;color:#86efac;border:1px solid #14532d;font-size:12px}
+.btn{width:100%;border:0;border-radius:15px;padding:14px;background:var(--accent);color:#111827;font-weight:900;font-size:15px;cursor:pointer}.btn.secondary{background:var(--card2);border:1px solid var(--line);color:var(--text)}.btn.danger{background:var(--red);color:white}.btn.small{width:auto;padding:8px 11px;font-size:12px}
+label{display:block;margin:11px 0 6px;color:#cbd5e1;font-weight:bold;font-size:14px}select,input,textarea{width:100%;border:1px solid var(--line);background:var(--card2);color:var(--text);border-radius:15px;padding:13px;font-size:16px}
+.item{display:flex;justify-content:space-between;gap:10px;border-bottom:1px solid var(--line);padding:10px 0}.item:last-child{border-bottom:0}.item strong{text-align:right}
+.ok{background:#10281b;border:1px solid #14532d;color:#bbf7d0;border-radius:15px;padding:12px;margin-bottom:10px}.warn{background:#3a2712;border:1px solid #92400e;color:#fde68a;border-radius:15px;padding:12px;margin-bottom:10px}
+.tabs{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:#0c1525;border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(5,1fr);padding:8px 4px 10px;z-index:10}
+.tab{background:transparent;color:var(--muted);border:0;font-size:10px;padding:4px;cursor:pointer}.tab span{display:block;font-size:20px}.tab.active{color:var(--accent)}
+.map{height:360px;background:#e8f3ff;border-radius:20px;overflow:hidden;position:relative;border:1px solid #94a3b8}.map svg{width:100%;height:100%;display:block}
+.pointList{max-height:250px;overflow:auto}.queueItem{background:var(--card2);border:1px solid var(--line);border-radius:16px;padding:12px;margin-bottom:8px}.photoThumb{width:100%;max-height:220px;object-fit:cover;border-radius:14px;border:1px solid var(--line);background:#000}.sigCanvas{width:100%;height:160px;background:#fff;border-radius:14px;border:2px dashed #64748b;touch-action:none}
+.poleArt{height:190px;position:relative;border-radius:24px;background:linear-gradient(180deg,#60a5fa,#dbeafe 58%,#14532d);overflow:hidden;margin-bottom:14px}.pole{position:absolute;left:198px;top:42px;width:18px;height:135px;background:linear-gradient(90deg,#6b7280,#e5e7eb,#6b7280);border-radius:8px}.cross{position:absolute;left:110px;top:70px;width:190px;height:15px;background:#7c2d12;border-radius:8px;box-shadow:0 12px 0 #7c2d12}.wire{position:absolute;left:0;right:0;height:3px;background:#111827}.w1{top:67px}.w2{top:100px}.w3{top:132px}.ins{position:absolute;width:16px;height:20px;background:#e0f2fe;border:2px solid #0369a1;border-radius:50%;top:59px}.i1{left:132px}.i2{left:198px}.i3{left:264px}
+@media print{body{background:#fff!important;color:#000!important;max-width:none!important}.tabs,.btn,.noPrint{display:none!important}.card{box-shadow:none!important;border:1px solid #ccc!important;background:#fff!important;color:#000!important}.muted,.tiny{color:#333!important}.app{padding:10px!important}.screen{display:block}.screen:not(#project){display:none!important}body.printMaterials .screen{display:none!important}body.printMaterials #materials{display:block!important}body.pdfPrint .app,body.pdfPrint .tabs{display:none!important}body.pdfPrint #pdfPrintArea{display:block!important}.pdfPage{page-break-after:always;padding:18px;font-family:Arial,Helvetica,sans-serif;color:#000}.pdfTitle{font-size:20px;font-weight:900;margin-bottom:10px;border-bottom:2px solid #111;padding-bottom:8px}.pdfRow{display:flex;justify-content:space-between;border-bottom:1px solid #ddd;padding:5px 0;font-size:12px;gap:12px}.pdfRow span:first-child{font-weight:bold}.pdfSep{height:12px}}
+</style>
+</head>
+<body>
+<div class="app">
+<section id="home" class="screen active">
+<div class="row" style="margin-bottom:14px"><div><div class="muted">Projeto georreferenciado</div><h1>RedeCalc Pro GPS</h1></div><span class="badge">GPS</span></div>
+<div class="poleArt"><div class="wire w1"></div><div class="wire w2"></div><div class="wire w3"></div><div class="pole"></div><div class="cross"></div><div class="ins i1"></div><div class="ins i2"></div><div class="ins i3"></div></div>
+<div class="card hero"><h2>Desenhe o projeto em campo</h2><p class="muted">Use o GPS do celular para capturar cada poste, adicionar a estrutura instalada, transformador, chaves e desenhar o traçado da rede automaticamente.</p><button class="btn" onclick="go('project')">ABRIR PROJETO GPS</button></div>
+<div class="card"><h3>Recursos</h3><div class="item"><span>GPS em tempo real</span><strong>latitude/longitude</strong></div><div class="item"><span>Adicionar estrutura</span><strong>poste + MT + BT</strong></div><div class="item"><span>Equipamentos</span><strong>TR + chaves</strong></div><div class="item"><span>Exportar dados</span><strong>PDF funcionando</strong></div></div>
+</section>
+
+<section id="project" class="screen">
+<div class="row"><h2>Projeto em campo</h2><button class="btn small secondary" onclick="saveSheetPDF()">Prancha PDF</button></div>
+<div class="card noPrint">
+<h3>Dados da prancha</h3>
+<label>Município</label><input id="cityInput" placeholder="Ex.: Nazária">
+<label>Obra / Assunto</label><input id="workInput" placeholder="Ex.: Ampliação de potência / extensão de rede">
+<label>Local</label><input id="localInput" placeholder="Ex.: Zona urbana / rural / comunidade">
+<label>Alimentador</label><input id="feederInput" placeholder="Ex.: 01C2 ETA-ESPERANTINA">
+<label>Nota / Código da obra</label><input id="noteInput" placeholder="Ex.: 440216019">
+<label>Responsável técnico</label><input id="rtInput" placeholder="Nome do responsável técnico">
+<label>Escala</label><input id="scaleInput" value="1/500">
+<button class="btn" onclick="saveSheetData()">Salvar dados da prancha</button>
+</div>
+<div class="card noPrint">
+<div class="row"><button class="btn small" onclick="startGPS()">Ligar GPS</button><button class="btn small secondary" onclick="stopGPS()">Parar</button><button class="btn small danger" onclick="clearProject()">Limpar</button></div>
+<p class="tiny" id="gpsStatus">GPS parado. Toque em “Ligar GPS”.</p>
+<div class="item"><span>Latitude</span><strong id="latOut">--</strong></div>
+<div class="item"><span>Longitude</span><strong id="lngOut">--</strong></div>
+<div class="item"><span>Precisão</span><strong id="accOut">--</strong></div><div class="metric" style="margin-top:10px"><div class="metricBox"><span class="tiny">Distância do último poste</span><strong id="liveDistanceOut">--</strong></div><div class="metricBox"><span class="tiny">Próximo ponto</span><strong id="nextPointOut">P1</strong></div></div><p class="tiny">Use essa distância em tempo real para caminhar até o vão desejado e então tocar em adicionar estrutura.</p>
+</div>
+
+<div class="card noPrint">
+<h3>Adicionar ponto/estrutura</h3>
+<label>Nome do ponto</label><input id="pointName" placeholder="Ex.: P1, P2, Derivação, Transformador">
+<label>Poste</label><select id="poleSelect"></select>
+<label>Situação do poste</label><select id="poleStatusSelect"><option value="novo">Poste novo</option><option value="existente">Poste existente</option></select><label>Aterramento no poste</label><select id="groundingSelect"><option value="Não">Não</option><option value="Sim">Sim, com haste e descida</option><option value="Aterramento do transformador">Aterramento do transformador</option></select>
+<label>Transformador instalado</label><select id="transformerSelect"></select>
+<label>Adicionar chave</label><select id="switchSelect"></select>
+<label>Estrutura primária</label><select id="primarySelect"></select>
+<label>Cabo da rede MT</label><select id="mtCableSelect"></select>
+<label>Tipo de trecho até este ponto</label><select id="lineTypeSelect"><option value="MT">Rede MT - linha vermelha tracejada</option><option value="BT">Rede BT - linha vermelha contínua</option></select>
+<label>Estrutura secundária</label><select id="secondarySelect"></select>
+<label>Cabo da rede BT</label><select id="btCableSelect"></select>
+<label>Observação</label><textarea id="obsInput" rows="2" placeholder="Ex.: fim de linha, derivação, estai, transformador..."></textarea>
+<br><br><button class="btn" onclick="addCurrentPoint()">Adicionar estrutura no local atual</button>
+</div>
+
+
+<div class="card noPrint">
+<h3>Evidências do local</h3>
+<p class="tiny">Tire fotos pelo celular, registre coordenadas do GPS e escreva um comentário para cada evidência.</p>
+<label>Foto da evidência</label>
+<input id="evidenceFile" type="file" accept="image/*" capture="environment">
+<label>Comentário da foto</label><textarea id="evidenceComment" rows="3" placeholder="Ex.: poste existente, chave fusível instalada, transformador, acesso ao local..."></textarea>
+<label>Responsável pelo registro</label><input id="evidenceAuthor" placeholder="Nome do responsável">
+<div class="row" style="margin-top:12px"><button class="btn small" onclick="addEvidence()">Salvar evidência</button><button class="btn small secondary" onclick="openTimestampCamera()">Abrir Timestamp Camera</button></div>
+<p class="tiny">Caso use Timestamp Camera, tire a foto por lá e depois volte para anexar/selecionar a imagem neste campo.</p>
+<div id="evidenceList" style="margin-top:10px"></div>
+</div>
+
+<div class="card noPrint">
+<h3>Assinatura digital</h3>
+<label>Nome do responsável</label><input id="signatureName" placeholder="Nome completo">
+<label>Cargo/Função</label><select id="signatureRole"><option>Encarregado</option><option>Técnico em Eletrotécnica</option><option>Engenheiro Eletricista</option><option>Fiscal</option><option>Outro</option></select>
+<canvas id="signatureCanvas" class="sigCanvas" width="390" height="160"></canvas>
+<div class="row" style="margin-top:12px"><button class="btn small secondary" onclick="clearSignature()">Limpar</button><button class="btn small" onclick="saveSignature()">Salvar assinatura</button></div>
+<div id="signaturePreview" style="margin-top:10px"></div>
+</div>
+
+<div class="card"><h3>Distâncias do projeto</h3><div class="item"><span>Distância total</span><strong id="totalDistanceOut">0 m</strong></div><div id="distanceList"></div></div>
+<div class="card"><h3>Mapa/desenho do projeto</h3><div class="map"><svg id="projectSvg" viewBox="0 0 400 360"></svg></div><p class="tiny">MT tracejada. BT contínua. Poste existente em preto. Transformador azul. Chaves em amarelo.</p></div>
+<div class="card"><div class="row"><h3>Pontos do projeto</h3><span class="badge" id="pointCount">0 pontos</span></div><div id="pointsList" class="pointList"></div></div>
+<div class="card noPrint"><h3>Exportar</h3><button class="btn" onclick="saveSheetPDF()">Salvar prancha em PDF</button><br><br><button class="btn secondary" onclick="saveProjectPDF()">Salvar relatório simples em PDF</button><br><br><button class="btn secondary" onclick="saveMaterialsPDF()">📦 Salvar Lista de Materiais PDF</button><br><br><div class="row"><button class="btn small secondary" onclick="downloadCSV()">CSV</button><button class="btn small secondary" onclick="downloadJSON()">JSON</button><button class="btn small secondary" onclick="downloadDXF()">DXF</button></div><br><button class="btn secondary" onclick="saveMemorialPDF()">Memorial descritivo PDF</button><br><br><button class="btn small secondary" onclick="copyLink()">Copiar coords</button></div>
+</section>
+
+<section id="materials" class="screen"><h2>Materiais do projeto</h2><div class="card noPrint"><button class="btn" onclick="saveMaterialsPDF()">📦 Salvar Lista de Materiais PDF</button><p class="tiny">O PDF agora é gerado direto pelo app, sem depender da impressão do Android.</p></div><div class="card"><h3>Lista consolidada dos pontos GPS</h3><div id="materialList"></div></div></section>
+<section id="about" class="screen"><h2>Sobre</h2><div class="card"><h3>GPS e precisão</h3><p class="muted">A precisão depende do celular, céu aberto e sinal GPS. Em campo, aguarde a precisão melhorar antes de salvar o ponto.</p><div class="warn">A função GPS precisa de HTTPS. No GitHub Pages funciona. Abrindo o arquivo direto no celular, o navegador pode bloquear a localização.</div></div></section>
+<section id="config" class="screen"><h2>Configurações</h2><div class="card"><h3>Banco básico de estruturas</h3><p class="muted">Versão com estruturas, postes existentes, transformadores e chaves.</p><div id="dbList"></div></div></section>
+</div>
+
+<nav class="tabs"><button class="tab active" onclick="go('home',this)"><span>🏠</span>Início</button><button class="tab" onclick="go('project',this)"><span>📍</span>Projeto</button><button class="tab" onclick="go('materials',this)"><span>📦</span>Material</button><button class="tab" onclick="go('config',this)"><span>⚙️</span>Banco</button><button class="tab" onclick="go('about',this)"><span>ℹ️</span>Sobre</button></nav>
+
+<script>
+const poles=["9-300","9-600","10-300","11-300","11-600","11-1000","11-1500","12-600","12-1000","12-1500","13-1500"];
+const mtCables=["2 AWG","1/0 AWG","4/0 AWG","336 MCM","XLPE 35 mm²","XLPE 50 mm²","XLPE 70 mm²","XLPE 185 mm²"];
+const btCables=["Monofásico 2×35 mm²","Trifásico 4×35 mm²","Trifásico 4×70 mm²","Trifásico 4×120 mm²"];
+const transformerPowers=["Sem transformador","15 kVA","30 kVA","45 kVA","75 kVA","112,5 kVA","150 kVA","225 kVA","300 kVA"];
+const switchTypes=["Sem chave","Chave fusível","Chave faca","Chave seccionadora"];
+const primaryStructures={"Sem primária":{},"N1":{"Cruzeta T":1,"Isolador pilar 15 kV":3,"Pino auto travante":3,"Parafuso 16x250 mm":2,"Arruela":4},"N2":{"Cruzeta T":2,"Isolador pilar 15 kV":6,"Pino auto travante":6,"Parafuso 16x250 mm":4,"Arruela":12,"Porca M16":4},"N3":{"Cruzeta T":2,"Isolador bastão polimérico":3,"Alça pré-formada":3,"Manilha":3,"Gancho olhal":3,"Parafuso 16x250 mm":4,"Arruela":12},"N4":{"Cruzeta T":2,"Isolador bastão polimérico":6,"Alça pré-formada":6,"Manilha":6,"Gancho olhal":6,"Conector cunha":3,"Parafuso 16x250 mm":4,"Arruela":12},"N3-N3":{"Cruzeta T":4,"Isolador bastão polimérico":6,"Alça pré-formada":6,"Manilha":6,"Gancho olhal":6,"Parafuso 16x250 mm":8,"Arruela":24},"N3-N4":{"Cruzeta T":4,"Isolador bastão polimérico":9,"Alça pré-formada":9,"Manilha":9,"Gancho olhal":9,"Conector cunha":3,"Parafuso 16x250 mm":8,"Arruela":24},"N4-N4":{"Cruzeta T":4,"Isolador bastão polimérico":12,"Alça pré-formada":12,"Manilha":12,"Gancho olhal":12,"Conector cunha":6,"Parafuso 16x250 mm":8,"Arruela":24},"N1-N3":{"Cruzeta T":3,"Isolador pilar 15 kV":3,"Isolador bastão polimérico":3,"Alça pré-formada":3,"Pino auto travante":3,"Manilha":3,"Gancho olhal":3,"Arruela":18},"N1-N4":{"Cruzeta T":3,"Isolador pilar 15 kV":3,"Isolador bastão polimérico":6,"Alça pré-formada":6,"Pino auto travante":3,"Manilha":6,"Gancho olhal":6,"Conector cunha":3,"Arruela":18},"U1":{"Braço tipo U":1,"Isolador pilar 15 kV":1,"Pino auto travante":1,"Parafuso 16x250 mm":2,"Arruela":2},"U2":{"Braço tipo U":2,"Isolador pilar 15 kV":2,"Pino auto travante":2,"Parafuso 16x250 mm":4,"Arruela":4},"U3":{"Braço tipo U":1,"Isolador bastão polimérico":1,"Alça pré-formada":1,"Manilha":1,"Gancho olhal":1,"Parafuso 16x250 mm":2,"Arruela":2},"U3U3":{"Braço tipo U":2,"Isolador bastão polimérico":2,"Alça pré-formada":2,"Manilha":2,"Gancho olhal":2,"Parafuso 16x250 mm":4,"Arruela":4},"U3-U3":{"Braço tipo U":2,"Isolador bastão polimérico":2,"Alça pré-formada":2,"Manilha":2,"Gancho olhal":2,"Parafuso 16x250 mm":4,"Arruela":4},"U3-U4":{"Braço tipo U":3,"Isolador bastão polimérico":3,"Alça pré-formada":3,"Manilha":3,"Gancho olhal":3,"Conector cunha":1,"Parafuso 16x250 mm":6,"Arruela":6},"U4":{"Braço tipo U":2,"Isolador bastão polimérico":2,"Alça pré-formada":2,"Manilha":2,"Gancho olhal":2,"Conector cunha":1,"Parafuso 16x250 mm":4,"Arruela":4},"U4-U4":{"Braço tipo U":4,"Isolador bastão polimérico":4,"Alça pré-formada":4,"Manilha":4,"Gancho olhal":4,"Conector cunha":2,"Parafuso 16x250 mm":8,"Arruela":8},"B1":{"Cruzeta T":1,"Isolador pilar 15 kV":2,"Pino auto travante":2,"Parafuso 16x250 mm":2,"Arruela":4},"B2":{"Cruzeta T":2,"Isolador pilar 15 kV":4,"Pino auto travante":4,"Parafuso 16x250 mm":4,"Arruela":8},"B3":{"Cruzeta T":2,"Isolador bastão polimérico":2,"Alça pré-formada":2,"Manilha":2,"Gancho olhal":2,"Parafuso 16x250 mm":4,"Arruela":8},"B3B3":{"Cruzeta T":4,"Isolador bastão polimérico":4,"Alça pré-formada":4,"Manilha":4,"Gancho olhal":4,"Parafuso 16x250 mm":8,"Arruela":16},"B3-B3":{"Cruzeta T":4,"Isolador bastão polimérico":4,"Alça pré-formada":4,"Manilha":4,"Gancho olhal":4,"Parafuso 16x250 mm":8,"Arruela":16},"B4":{"Cruzeta T":2,"Isolador bastão polimérico":4,"Alça pré-formada":4,"Manilha":4,"Gancho olhal":4,"Conector cunha":2,"Parafuso 16x250 mm":4,"Arruela":8},"B4-B4":{"Cruzeta T":4,"Isolador bastão polimérico":8,"Alça pré-formada":8,"Manilha":8,"Gancho olhal":8,"Conector cunha":4,"Parafuso 16x250 mm":8,"Arruela":16},"CE1":{"Braço L":1,"Parafuso 16x250 mm":2},"CE1a":{"Braço L":1,"Parafuso 16x250 mm":3,"Estribo":1,"Espaçador losangular":1,"Braço antibalanço":1},"CE2":{"Braço C":1,"Isolador de polímero":3,"Pino curto":3,"Anel de silicone":3,"Parafuso 16x250 mm":2,"Arruela":2},"CE3":{"Braço C":1,"Suporte braço C":1,"Parafuso 16x60 mm":1,"Isolador bastão":3,"Grampa de suspensão":3,"Parafuso 16x250 mm":2,"Olhal 5.000 daN":3,"Gancho":3,"Manilha":3,"Arruela":2},"CE4":{"Braço C":1,"Suporte braço C":1,"Parafuso 16x60 mm":1,"Isolador bastão":6,"Grampa de suspensão":3,"Parafuso 16x250 mm":2,"Olhal 5.000 daN":6,"Gancho":6,"Manilha":6,"Arruela":2},"CE3-CE3":{"Braço C":2,"Suporte braço C":2,"Isolador bastão":6,"Grampa de suspensão":6,"Parafuso 16x250 mm":4,"Olhal 5.000 daN":6,"Gancho":6,"Manilha":6,"Arruela":4},"CE4-CE4":{"Braço C":2,"Suporte braço C":2,"Isolador bastão":12,"Grampa de suspensão":6,"Parafuso 16x250 mm":4,"Olhal 5.000 daN":12,"Gancho":12,"Manilha":12,"Arruela":4},"TR Monofásico":{"Suporte transformador":1,"Para-raios polimérico":1,"Chave fusível":1,"Elo fusível":1,"Aterramento do transformador":1},"TR Trifásico":{"Suporte transformador":1,"Para-raios polimérico":3,"Chave fusível":3,"Elo fusível":3,"Aterramento do transformador":1},"CF - Chave fusível":{"Chave fusível 15 kV":1,"Suporte de chave":1,"Elo fusível":1,"Conector cunha":2},"CF3 - Banco de chaves fusíveis":{"Chave fusível 15 kV":3,"Suporte de chave":3,"Elo fusível":3,"Conector cunha":6},"SECC - Chave seccionadora":{"Chave seccionadora":1,"Suporte de chave":1,"Conector cunha":2},"REL - Religador":{"Religador":1,"Suporte para religador":1,"Para-raios":3,"Chave by-pass":3,"Aterramento":1}};
+const secondaryStructures={"Sem secundária":{},"S1":{"Armação simples":1,"Parafuso 16x250 mm":1,"Isolador roldana":1,"Arruela":1},"S2":{"Armação secundária 2 estribos":1,"Parafuso 16x250 mm":1,"Isolador roldana":2,"Arruela":2},"S3":{"Parafuso olhal 16x250 mm":1,"Arruela":2},"S4":{"Parafuso olhal 16x250 mm":1,"Arruela":2,"Porca olhal":1},"S1-S1":{"Armação simples":2,"Parafuso 16x250 mm":2,"Isolador roldana":2,"Arruela":2},"S1-S3":{"Armação simples":1,"Parafuso olhal 16x250 mm":1,"Parafuso 16x250 mm":1,"Isolador roldana":1,"Arruela":3},"S3-S3":{"Parafuso olhal 16x250 mm":2,"Arruela":4},"S4-S4":{"Parafuso olhal 16x250 mm":2,"Porca olhal":2,"Arruela":4},"SI1":{"Suporte isolador secundário":1,"Isolador roldana":1,"Parafuso 16x250 mm":1,"Arruela":1},"SI3":{"Suporte isolador secundário":3,"Isolador roldana":3,"Parafuso 16x250 mm":3,"Arruela":3},"BT1":{"Suporte para cabo multiplexado":1,"Grampo de suspensão BT":1,"Parafuso 16x250 mm":1,"Arruela":2},"BT2":{"Suporte para cabo multiplexado":1,"Grampo de ancoragem BT":1,"Alça pré-formada BT":1,"Parafuso olhal 16x250 mm":1,"Arruela":2},"BT3":{"Suporte para cabo multiplexado":2,"Grampo de ancoragem BT":2,"Alça pré-formada BT":2,"Parafuso olhal 16x250 mm":2,"Arruela":4},"BT4":{"Suporte para derivação BT":1,"Conector perfurante":4,"Grampo de ancoragem BT":1,"Parafuso olhal 16x250 mm":1,"Arruela":2},"Ramal consumidor":{"Conector perfurante":2,"Grampo de ancoragem ramal":1,"Alça pré-formada ramal":1},"IP1":{"Braço de iluminação pública":1,"Luminária":1,"Relé fotoelétrico":1,"Conector perfurante":2},"IP2":{"Braço de iluminação pública duplo":1,"Luminária":2,"Relé fotoelétrico":2,"Conector perfurante":4}};
+let currentPos=null, watchId=null;let project=JSON.parse(localStorage.getItem("redecalc_gps_project")||"[]");let sheetData=JSON.parse(localStorage.getItem("redecalc_sheet_data")||"{}");
+let evidences=JSON.parse(localStorage.getItem("redecalc_evidences")||"[]");
+let signatureData=JSON.parse(localStorage.getItem("redecalc_signature")||"{}");
+function go(id,btn){document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));document.getElementById(id).classList.add("active");document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));if(btn)btn.classList.add("active");renderAll();}
+function fillSelects(){poleSelect.innerHTML=poles.map(p=>`<option>${p}</option>`).join("");primarySelect.innerHTML=Object.keys(primaryStructures).map(p=>`<option>${p}</option>`).join("");secondarySelect.innerHTML=Object.keys(secondaryStructures).map(s=>`<option>${s}</option>`).join("");mtCableSelect.innerHTML=mtCables.map(c=>`<option>${c}</option>`).join("");btCableSelect.innerHTML=btCables.map(c=>`<option>${c}</option>`).join("");transformerSelect.innerHTML=transformerPowers.map(t=>`<option>${t}</option>`).join("");switchSelect.innerHTML=switchTypes.map(c=>`<option>${c}</option>`).join("");}
+function save(){localStorage.setItem("redecalc_gps_project",JSON.stringify(project));}
+function startGPS(){if(!navigator.geolocation){gpsStatus.textContent="Este aparelho/navegador não suporta GPS.";return;}gpsStatus.textContent="Buscando localização...";watchId=navigator.geolocation.watchPosition(pos=>{currentPos={lat:pos.coords.latitude,lng:pos.coords.longitude,acc:pos.coords.accuracy,time:new Date().toISOString()};latOut.textContent=currentPos.lat.toFixed(7);lngOut.textContent=currentPos.lng.toFixed(7);accOut.textContent=currentPos.acc.toFixed(1)+" m";gpsStatus.textContent="GPS ativo em tempo real.";updateLiveDistance();},err=>{gpsStatus.textContent="Erro no GPS: "+err.message;},{enableHighAccuracy:true,maximumAge:1000,timeout:15000});}
+function stopGPS(){if(watchId!==null){navigator.geolocation.clearWatch(watchId);watchId=null;}gpsStatus.textContent="GPS parado.";}
+function addCurrentPoint(){if(!currentPos){alert("Ligue o GPS e aguarde capturar a localização.");return;}const name=pointName.value.trim()||"P"+(project.length+1);project.push({name,lat:currentPos.lat,lng:currentPos.lng,acc:currentPos.acc,time:currentPos.time,pole:poleSelect.value,poleStatus:poleStatusSelect.value,grounding:groundingSelect.value,primary:primarySelect.value,mtCable:mtCableSelect.value,btCable:btCableSelect.value,lineType:lineTypeSelect.value,secondary:secondarySelect.value,transformer:transformerSelect.value,switchType:switchSelect.value,obs:obsInput.value.trim()});pointName.value="";obsInput.value="";save();renderAll();updateLiveDistance();}
+function removePoint(i){project.splice(i,1);save();renderAll();}function clearProject(){if(confirm("Apagar todos os pontos do projeto?")){project=[];save();renderAll();}}
+function bounds(){if(!project.length)return null;let minLat=Math.min(...project.map(p=>p.lat)),maxLat=Math.max(...project.map(p=>p.lat)),minLng=Math.min(...project.map(p=>p.lng)),maxLng=Math.max(...project.map(p=>p.lng));if(minLat===maxLat){minLat-=0.0001;maxLat+=0.0001}if(minLng===maxLng){minLng-=0.0001;maxLng+=0.0001}return{minLat,maxLat,minLng,maxLng};}
+function xy(p,b){const pad=35;return{x:pad+(p.lng-b.minLng)/(b.maxLng-b.minLng)*(400-pad*2),y:325-(p.lat-b.minLat)/(b.maxLat-b.minLat)*300};}
+function renderMap(){const b=bounds();let svg='<rect width="400" height="360" fill="#e8f3ff"/><text x="12" y="22" font-size="13" fill="#334155">Planta simplificada por GPS</text><line x1="12" y1="40" x2="70" y2="40" stroke="#dc2626" stroke-width="4" stroke-dasharray="9 7"/><text x="76" y="44" font-size="10" fill="#111">MT</text><line x1="120" y1="40" x2="178" y2="40" stroke="#dc2626" stroke-width="4"/><text x="184" y="44" font-size="10" fill="#111">BT</text><circle cx="235" cy="40" r="7" fill="#000"/><text x="247" y="44" font-size="10" fill="#111">Poste existente</text><rect x="330" y="30" width="22" height="16" rx="3" fill="#2563eb" stroke="#111"/><text x="341" y="42" font-size="7" text-anchor="middle" fill="#fff">TR</text>';
+if(project.length&&b){let pts=project.map(p=>xy(p,b));if(pts.length>1){for(let i=1;i<pts.length;i++){const a=pts[i-1],bp=pts[i];const type=project[i].lineType||"MT";const dash=type==="MT"?'stroke-dasharray="9 7"':"";svg+=`<line x1="${a.x}" y1="${a.y}" x2="${bp.x}" y2="${bp.y}" stroke="#dc2626" stroke-width="4" ${dash}/>`;const midX=(a.x+bp.x)/2, midY=(a.y+bp.y)/2;const d=distanceMeters(project[i-1],project[i]);const label=type==="MT"?"MT "+(project[i].mtCable||""):"BT";svg+=`<rect x="${midX-43}" y="${midY-22}" width="86" height="30" rx="8" fill="#fff" stroke="#dc2626"/><text x="${midX}" y="${midY-10}" font-size="10" text-anchor="middle" fill="#111">${label}</text><text x="${midX}" y="${midY+2}" font-size="10" text-anchor="middle" fill="#111">${formatDistance(d)}</text>`;}}
+pts.forEach((p,i)=>{const item=project[i];const poleColor=item.poleStatus==="existente"?"#000000":"#0b1220";svg+=`<circle cx="${p.x}" cy="${p.y}" r="10" fill="${poleColor}" stroke="#f97316" stroke-width="3"/>`;if(item.transformer&&item.transformer!=="Sem transformador"){svg+=`<rect x="${p.x-11}" y="${p.y+13}" width="22" height="16" rx="3" fill="#2563eb" stroke="#111" stroke-width="1"/><text x="${p.x}" y="${p.y+25}" font-size="7" text-anchor="middle" fill="#fff">TR</text><text x="${p.x+16}" y="${p.y+27}" font-size="9" fill="#111">${item.transformer}</text>`;}if(item.switchType&&item.switchType!=="Sem chave"){let symbol="CF";if(item.switchType==="Chave faca")symbol="FA";if(item.switchType==="Chave seccionadora")symbol="SC";svg+=`<polygon points="${p.x-10},${p.y-26} ${p.x+10},${p.y-26} ${p.x+10},${p.y-12} ${p.x-10},${p.y-12}" fill="#facc15" stroke="#111"/><text x="${p.x}" y="${p.y-16}" font-size="8" text-anchor="middle" fill="#111">${symbol}</text>`;}if(item.grounding&&item.grounding!=="Não"){svg+=`<line x1="${p.x-8}" y1="${p.y+20}" x2="${p.x-8}" y2="${p.y+40}" stroke="#16a34a" stroke-width="3"/><line x1="${p.x-18}" y1="${p.y+40}" x2="${p.x+2}" y2="${p.y+40}" stroke="#16a34a" stroke-width="3"/><line x1="${p.x-15}" y1="${p.y+46}" x2="${p.x-1}" y2="${p.y+46}" stroke="#16a34a" stroke-width="2"/><line x1="${p.x-12}" y1="${p.y+51}" x2="${p.x-4}" y2="${p.y+51}" stroke="#16a34a" stroke-width="2"/>`;}svg+=`<text x="${p.x+12}" y="${p.y+4}" font-size="12" font-weight="bold" fill="#111">${item.name}</text>`;});}else svg+='<text x="60" y="180" font-size="15" fill="#64748b">Adicione pontos com GPS para desenhar a rede</text>';svg+='<rect y="335" width="400" height="25" fill="#14532d"/>';projectSvg.innerHTML=svg;}
+function distanceMeters(a,b){const R=6371000,lat1=a.lat*Math.PI/180,lat2=b.lat*Math.PI/180,dLat=(b.lat-a.lat)*Math.PI/180,dLng=(b.lng-a.lng)*Math.PI/180,h=Math.sin(dLat/2)**2+Math.cos(lat1)*Math.cos(lat2)*Math.sin(dLng/2)**2;return 2*R*Math.atan2(Math.sqrt(h),Math.sqrt(1-h));}
+function formatDistance(m){if(!isFinite(m))return"0 m";return m<1000?m.toFixed(1)+" m":(m/1000).toFixed(3)+" km";}function totalDistance(){let total=0;for(let i=1;i<project.length;i++)total+=distanceMeters(project[i-1],project[i]);return total;}function updateLiveDistance(){if(document.getElementById("nextPointOut"))nextPointOut.textContent="P"+(project.length+1);if(!document.getElementById("liveDistanceOut"))return;if(!currentPos||!project.length){liveDistanceOut.textContent=project.length?"aguardando GPS":"0 m";return;}const last=project[project.length-1];liveDistanceOut.textContent=formatDistance(distanceMeters(last,currentPos));}
+function renderDistances(){totalDistanceOut.textContent=formatDistance(totalDistance());updateLiveDistance();if(project.length<2){distanceList.innerHTML='<p class="muted">Adicione pelo menos 2 pontos para calcular distância.</p>';return;}let acc=0;distanceList.innerHTML=project.slice(1).map((p,i)=>{const from=project[i],d=distanceMeters(from,p);acc+=d;return`<div class="item"><span>${from.name} → ${p.name}<br><span class="tiny">Acumulado: ${formatDistance(acc)}</span></span><strong>${formatDistance(d)}</strong></div>`}).join("");}
+function renderPoints(){pointCount.textContent=project.length+" pontos";pointsList.innerHTML=project.length?project.map((p,i)=>`<div class="queueItem"><div class="row"><div><strong>${i+1}. ${p.name} — Poste ${p.pole}</strong><br><span class="muted">${p.primary} + ${p.secondary}</span><br><span class="tiny">Poste: ${p.poleStatus==="existente"?"existente":"novo"}</span><br><span class="tiny groundBadge">Aterramento: ${p.grounding||"Não"}</span><br><span class="tiny">Transformador: ${p.transformer||"Sem transformador"}</span><br><span class="tiny">Chave: ${p.switchType||"Sem chave"}</span><br><span class="tiny">Trecho: ${p.lineType||"MT"} ${p.lineType==="MT"?"• Cabo MT "+(p.mtCable||""):"• Cabo BT "+(p.btCable||"")}</span><br><span class="tiny">${p.lat.toFixed(7)}, ${p.lng.toFixed(7)} • ±${p.acc.toFixed(1)} m</span><br><span class="tiny">${p.obs||""}</span></div><button class="btn small danger" onclick="removePoint(${i})">X</button></div></div>`).join(""):'<p class="muted">Nenhum ponto adicionado.</p>';}
+function addItems(total,items){Object.keys(items).forEach(k=>total[k]=(total[k]||0)+items[k]);}
+function buildMaterialsSummary(){
+ const groups={"Postes":{},"Aterramento":{},"Estruturas primárias":{},"Estruturas secundárias":{},"Transformadores":{},"Chaves":{},"Cabos MT":{},"Cabos BT":{},"Materiais por atribuição":{}};
+ project.forEach((p,i)=>{
+   groups["Postes"]["Poste "+p.pole]=(groups["Postes"]["Poste "+p.pole]||0)+1;
+   if(p.poleStatus==="existente") groups["Postes"]["Poste existente"]=(groups["Postes"]["Poste existente"]||0)+1;
+   if(p.grounding&&p.grounding!=="Não"){groups["Aterramento"][p.grounding]=(groups["Aterramento"][p.grounding]||0)+1; addItems(groups["Materiais por atribuição"],{"Haste de aterramento":1,"Conector de aterramento":1,"Cabo cobre nu/descida de aterramento":1});}if(p.primary&&p.primary!=="Sem primária") groups["Estruturas primárias"][p.primary]=(groups["Estruturas primárias"][p.primary]||0)+1;
+   if(p.secondary&&p.secondary!=="Sem secundária") groups["Estruturas secundárias"][p.secondary]=(groups["Estruturas secundárias"][p.secondary]||0)+1;
+   addItems(groups["Materiais por atribuição"],primaryStructures[p.primary]||{});
+   addItems(groups["Materiais por atribuição"],secondaryStructures[p.secondary]||{});
+   if(p.transformer&&p.transformer!=="Sem transformador") groups["Transformadores"]["Transformador "+p.transformer]=(groups["Transformadores"]["Transformador "+p.transformer]||0)+1;
+   if(p.switchType&&p.switchType!=="Sem chave") groups["Chaves"][p.switchType]=(groups["Chaves"][p.switchType]||0)+1;
+   if(i>0){
+     const d=distanceMeters(project[i-1],p);
+     if((p.lineType||"MT")==="MT"){const k=p.mtCable||"não informado";groups["Cabos MT"][k]=(groups["Cabos MT"][k]||0)+d;}
+     else {const k=p.btCable||"Cabo BT não informado";groups["Cabos BT"][k]=(groups["Cabos BT"][k]||0)+d;}
+   }
+ });
+ return groups;
+}
+function materialsSummaryHTML(forPrint=false){
+ const groups=buildMaterialsSummary();
+ let html='';
+ Object.keys(groups).forEach(g=>{const obj=groups[g];const keys=Object.keys(obj).sort();if(!keys.length)return;html+=`<h3 style="margin-top:14px">${g}</h3>`;keys.forEach(k=>{const val=obj[k];const isM=(g==="Cabos MT"||g==="Cabos BT"||String(k).includes("(m)"));html+=`<div class="item"><span>${k}</span><strong>${isM?Number(val).toFixed(1)+" m":val+" un"}</strong></div>`;});});
+ if(evidences.length){html+='<h3 style="margin-top:14px">Evidências</h3>'+evidences.map((e,i)=>`<div class="item"><span>Foto ${String(i+1).padStart(2,"0")}<br><span class="tiny">${e.comment||"Sem comentário"}</span></span><strong>${e.author||"--"}</strong></div>`).join('');}
+ return html||'<p class="muted">Adicione pontos no projeto GPS para gerar materiais.</p>';
+}
+function renderMaterials(){materialList.innerHTML=materialsSummaryHTML(false);}
+function renderDB(){dbList.innerHTML=`<h3>Postes</h3><div class="item"><span>Poste novo</span><strong>cor padrão</strong></div><div class="item"><span>Poste existente</span><strong>preto</strong></div><br><h3>Transformadores</h3>${transformerPowers.map(t=>`<div class="item"><span>${t}</span><strong>TR</strong></div>`).join("")}<br><h3>Chaves</h3>${switchTypes.map(c=>`<div class="item"><span>${c}</span><strong>símbolo</strong></div>`).join("")}<br><h3>Cabos MT</h3>${mtCables.map(c=>`<div class="item"><span>${c}</span><strong>selecionável</strong></div>`).join("")}<br><h3>Cabos BT</h3>${btCables.map(c=>`<div class="item"><span>${c}</span><strong>selecionável</strong></div>`).join("")}<br><h3>Primária</h3>${Object.keys(primaryStructures).map(k=>`<div class="item"><span>${k}</span><strong>${Object.keys(primaryStructures[k]).length} itens</strong></div>`).join("")}<br><h3>Secundária</h3>${Object.keys(secondaryStructures).map(k=>`<div class="item"><span>${k}</span><strong>${Object.keys(secondaryStructures[k]).length} itens</strong></div>`).join("")}`;}
+function csvText(){return "nome,lat,lng,precisao,poste,situacao,primaria,cabo_mt,cabo_bt,tipo_trecho,secundaria,transformador,chave,aterramento,observacao\n"+project.map(p=>[p.name,p.lat,p.lng,p.acc,p.pole,p.poleStatus||"novo",p.primary,p.mtCable,p.btCable||"",p.lineType,p.secondary,p.transformer||"Sem transformador",p.switchType||"Sem chave",p.grounding||"Não",(p.obs||"").replaceAll(","," ")].join(",")).join("\n");}
+function downloadFile(name,text,type){const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([text],{type}));a.download=name;a.click();URL.revokeObjectURL(a.href);}function downloadCSV(){downloadFile("redecalc-pro-gps.csv",csvText(),"text/csv");}function downloadJSON(){downloadFile("redecalc-pro-gps.json",JSON.stringify({sheetData,project,evidences,signatureData},null,2),"application/json");}
+function downloadDXF(){let dxf="0\nSECTION\n2\nENTITIES\n";const b=bounds();if(project.length&&b){const pts=project.map(p=>xy(p,b));for(let i=1;i<pts.length;i++){dxf+=`0\nLINE\n8\nREDE_${project[i].lineType||"MT"}\n10\n${pts[i-1].x}\n20\n${pts[i-1].y}\n11\n${pts[i].x}\n21\n${pts[i].y}\n`;}pts.forEach((p,i)=>{dxf+=`0\nCIRCLE\n8\nPOSTES\n10\n${p.x}\n20\n${p.y}\n40\n3\n0\nTEXT\n8\nTEXTOS\n10\n${p.x+5}\n20\n${p.y}\n40\n5\n1\n${project[i].name}\n`;});}dxf+="0\nENDSEC\n0\nEOF";downloadFile("redecalc-pro-gps.dxf",dxf,"application/dxf");}
+function saveSheetData(){sheetData={city:cityInput.value,work:workInput.value,local:localInput.value,feeder:feederInput.value,note:noteInput.value,rt:rtInput.value,scale:scaleInput.value};localStorage.setItem("redecalc_sheet_data",JSON.stringify(sheetData));alert("Dados da prancha salvos.");}
+function loadSheetData(){cityInput.value=sheetData.city||"";workInput.value=sheetData.work||"";localInput.value=sheetData.local||"";feederInput.value=sheetData.feeder||"";noteInput.value=sheetData.note||"";rtInput.value=sheetData.rt||"";scaleInput.value=sheetData.scale||"1/500";}
+function pdfEscape(v){return String(v??"--").replace(/\\/g,"\\\\").replace(/\(/g,"\\(").replace(/\)/g,"\\)").replace(/[\r\n]+/g," ");}
+function cleanPdfText(v){return String(v??"--").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^\x20-\x7E]/g," ");}
+function addPdfLine(lines,left,right){lines.push({left:cleanPdfText(left),right:cleanPdfText(right||"")});}
+function collectPdfLines(kind){
+ saveSheetData();
+ const lines=[];
+ addPdfLine(lines,"REDECALC PRO GPS", kind);
+ addPdfLine(lines,"Data",new Date().toLocaleString("pt-BR"));
+ addPdfLine(lines,"Municipio",sheetData.city||"--");
+ addPdfLine(lines,"Obra/Assunto",sheetData.work||"--");
+ addPdfLine(lines,"Local",sheetData.local||"--");
+ addPdfLine(lines,"Alimentador",sheetData.feeder||"--");
+ addPdfLine(lines,"Nota/Codigo",sheetData.note||"--");
+ addPdfLine(lines,"Responsavel tecnico",sheetData.rt||"--");
+ addPdfLine(lines,"Escala",sheetData.scale||"1/500");
+ addPdfLine(lines,"Distancia total",(typeof totalDistance==="function"?totalDistance().toFixed(1):"0.0")+" m");
+ addPdfLine(lines,"Total de pontos",project.length+" ponto(s)");
+ lines.push({sep:true});
+ if(kind!=="MEMORIAL DESCRITIVO"){
+   addPdfLine(lines,"PONTOS GPS","");
+   project.forEach((p,i)=>{
+     addPdfLine(lines,`${String(i+1).padStart(2,"0")} - ${p.name}`,`Lat ${Number(p.lat).toFixed(7)} / Lng ${Number(p.lng).toFixed(7)}`);
+     addPdfLine(lines,"  Poste",`${p.pole||"--"} - ${p.poleStatus||"novo"} - Aterramento: ${p.grounding||"Não"}`);
+     addPdfLine(lines,"  Rede",`${p.lineType||"MT"} | MT: ${p.mtCable||"--"} | BT: ${p.btCable||"--"}`);
+     addPdfLine(lines,"  Estruturas",`Primaria: ${p.primary||"--"} | Secundaria: ${p.secondary||"--"}`);
+     addPdfLine(lines,"  Equipamentos",`TR: ${p.transformer||"Sem transformador"} | Chave: ${p.switchType||"Sem chave"}`);
+     if(p.obs)addPdfLine(lines,"  Obs",p.obs);
+     if(i>0)addPdfLine(lines,"  Distancia anterior",distanceMeters(project[i-1],p).toFixed(1)+" m");
+   });
+ }
+ if(kind==="LISTA DE MATERIAIS" || kind==="PRANCHA DO PROJETO"){
+   lines.push({sep:true}); addPdfLine(lines,"LISTA DE MATERIAIS","");
+   const groups=buildMaterialsSummary();
+   Object.keys(groups).forEach(g=>{const obj=groups[g];const keys=Object.keys(obj).sort(); if(!keys.length)return; addPdfLine(lines,g,""); keys.forEach(k=>{const val=obj[k]; const isM=(g==="Cabos MT"||g==="Cabos BT"||String(k).includes("(m)")); addPdfLine(lines,"  "+k,isM?Number(val).toFixed(1)+" m":val+" un");});});
+ }
+ if(kind==="MEMORIAL DESCRITIVO"){
+   addPdfLine(lines,"Descricao",`Projeto georreferenciado com ${project.length} ponto(s), contendo rede MT tracejada e rede BT continua, estruturas, cabos, transformadores, chaves e lista de materiais.`);
+   addPdfLine(lines,"Observacao","Arquivo gerado diretamente no aplicativo, sem depender da impressao do Android.");
+ }
+ if(evidences.length){lines.push({sep:true}); addPdfLine(lines,"EVIDENCIAS",evidences.length+" foto(s) registrada(s)"); evidences.forEach((e,i)=>addPdfLine(lines,`Foto ${i+1}`,`${e.comment||"Sem comentario"} - ${e.author||"--"}`));}
+ return lines;
+}
+function makeSimplePdf(lines,title){
+ const pageW=595,pageH=842,margin=42,lineH=15,maxY=790; let pages=[[]],y=margin;
+ function push(txt,x,size,bold){ if(y>maxY){pages.push([]);y=margin;} pages[pages.length-1].push({txt,x,y,size,bold}); y+=lineH; }
+ lines.forEach((l,idx)=>{ if(l.sep){y+=8;return;} const left=l.left||""; const right=l.right||""; if(idx===0){push(left,margin,17,true); if(right) push(right,margin,12,false); y+=6; return;} push(left.substring(0,54),margin,10,false); if(right) pages[pages.length-1].push({txt:right.substring(0,55),x:315,y:y-lineH,size:10,bold:false}); });
+ let objects=[]; const add=o=>{objects.push(o); return objects.length;};
+ const font1=add('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>'); const font2=add('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>');
+ const pageIds=[];
+ pages.forEach(pg=>{let stream=''; pg.forEach(t=>{stream+=`BT /${t.bold?'F2':'F1'} ${t.size} Tf ${t.x} ${pageH-t.y} Td (${pdfEscape(t.txt)}) Tj ET\n`;}); const content=add(`<< /Length ${stream.length} >>\nstream\n${stream}endstream`); pageIds.push(add(`<< /Type /Page /Parent 0 0 R /MediaBox [0 0 ${pageW} ${pageH}] /Resources << /Font << /F1 ${font1} 0 R /F2 ${font2} 0 R >> >> /Contents ${content} 0 R >>`));});
+ const pagesId=add(`<< /Type /Pages /Kids [${pageIds.map(id=>id+' 0 R').join(' ')}] /Count ${pageIds.length} >>`);
+ objects=objects.map(o=>o.replace('/Parent 0 0 R',`/Parent ${pagesId} 0 R`));
+ const catalogId=add(`<< /Type /Catalog /Pages ${pagesId} 0 R >>`);
+ let pdf='%PDF-1.4\n'; const offsets=[0]; objects.forEach((o,i)=>{offsets[i+1]=pdf.length; pdf+=`${i+1} 0 obj\n${o}\nendobj\n`;}); const xref=pdf.length; pdf+=`xref\n0 ${objects.length+1}\n0000000000 65535 f \n`; for(let i=1;i<=objects.length;i++) pdf+=String(offsets[i]).padStart(10,'0')+' 00000 n \n'; pdf+=`trailer << /Size ${objects.length+1} /Root ${catalogId} 0 R /Title (${pdfEscape(title)}) >>\nstartxref\n${xref}\n%%EOF`;
+ return new Blob([pdf],{type:'application/pdf'});
+}
+function blobToBase64(blob){return new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(String(r.result).split(',')[1]||'');r.onerror=reject;r.readAsDataURL(blob);});}
+function renderPrintPdf(kind){
+  const area=document.getElementById('pdfPrintArea');
+  const lines=collectPdfLines(kind);
+  let html='<div class="pdfPage"><div class="pdfTitle">'+cleanPdfText(kind)+'</div>';
+  lines.forEach(l=>{ if(l.sep){html+='<div class="pdfSep"></div>';return;} html+='<div class="pdfRow"><span>'+cleanPdfText(l.left||'')+'</span><span>'+cleanPdfText(l.right||'')+'</span></div>'; });
+  html+='</div>';
+  area.innerHTML=html;
+}
+function showPdfBox(filename,dataUrl){
+  const old=document.getElementById('pdfDownloadBox'); if(old) old.remove();
+  const box=document.createElement('div');
+  box.id='pdfDownloadBox'; box.className='card noPrint';
+  box.style.cssText='position:fixed;top:0;left:0;right:0;z-index:9999;margin:0;border-radius:0;padding:16px;background:#1a1a2e;border-bottom:3px solid #27ae60;';
+  box.innerHTML='<h3 style="margin:0 0 8px;color:#27ae60">✅ PDF gerado!</h3>'
+    +'<p style="margin:0 0 10px;font-size:13px;color:#ccc">Toque no botão abaixo para baixar o arquivo PDF:</p>'
+    +'<a id="pdfDownloadLink" class="btn" style="display:block;text-align:center;text-decoration:none;margin-bottom:8px;" href="'+dataUrl+'" download="'+filename+'">⬇ Baixar '+filename+'</a>'
+    +'<button class="btn secondary" style="width:100%;margin-top:4px" onclick="document.getElementById(\'pdfDownloadBox\').remove()">Fechar</button>';
+  document.body.prepend(box);
+  // Auto-click the download link after a short delay
+  setTimeout(()=>{
+    const link=document.getElementById('pdfDownloadLink');
+    if(link) link.click();
+  },300);
+}
+async function savePdfFile(kind,filename){
+ try{
+  const blob=makeSimplePdf(collectPdfLines(kind),kind);
+  const base64=await blobToBase64(blob);
+  // 1) Try native Android interface (if the app exposes savePdf or download)
+  if(window.RedeCalcAndroid){
+    if(typeof RedeCalcAndroid.savePdf==='function'){
+      RedeCalcAndroid.savePdf(base64,filename);
+      alert('PDF salvo em Downloads: '+filename);
+      return;
+    }
+    if(typeof RedeCalcAndroid.download==='function'){
+      RedeCalcAndroid.download(base64,filename,'application/pdf');
+      alert('PDF salvo em Downloads: '+filename);
+      return;
+    }
+  }
+  // 2) Try Blob URL download (works in most modern Android WebViews)
+  try{
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url; a.download=filename; a.style.display='none';
+    document.body.appendChild(a); a.click();
+    setTimeout(()=>{URL.revokeObjectURL(url); a.remove();},2000);
+    // Show box as confirmation / fallback
+    const dataUrl='data:application/pdf;base64,'+base64;
+    showPdfBox(filename,dataUrl);
+    return;
+  }catch(e2){console.warn('blobURL falhou:',e2);}
+  // 3) Fallback: data URL link
+  const dataUrl='data:application/pdf;base64,'+base64;
+  showPdfBox(filename,dataUrl);
+ }catch(e){console.error(e); alert('Nao foi possivel gerar o PDF: '+(e.message||e));}
+}
+// afterprint listener removido - PDF agora usa download direto sem window.print()
+function saveProjectPDF(){return savePdfFile('RELATORIO SIMPLES','redecalc-relatorio.pdf');}
+function saveSheetPDF(){return savePdfFile('PRANCHA DO PROJETO','redecalc-prancha.pdf');}
+function saveMemorialPDF(){return savePdfFile('MEMORIAL DESCRITIVO','redecalc-memorial.pdf');}
+function saveMaterialsPDF(){return savePdfFile('LISTA DE MATERIAIS','redecalc-lista-materiais.pdf');}
+function copyLink(){const text=project.map(p=>`${p.name}: ${p.lat}, ${p.lng}`).join("\n");navigator.clipboard?.writeText(text);alert("Coordenadas copiadas.");}
+
+function saveEvidences(){localStorage.setItem("redecalc_evidences",JSON.stringify(evidences));}
+function fileToDataURL(file){return new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(r.result);r.onerror=reject;r.readAsDataURL(file);});}
+async function addEvidence(){
+ const f=document.getElementById("evidenceFile").files[0];
+ if(!f){alert("Selecione ou tire uma foto primeiro.");return;}
+ const img=await fileToDataURL(f);
+ const pos=currentPos||{};
+ evidences.push({image:img,comment:evidenceComment.value.trim(),author:evidenceAuthor.value.trim(),time:new Date().toISOString(),lat:pos.lat||null,lng:pos.lng||null,acc:pos.acc||null});
+ evidenceFile.value="";evidenceComment.value="";saveEvidences();renderEvidences();
+}
+function removeEvidence(i){evidences.splice(i,1);saveEvidences();renderEvidences();}
+function renderEvidences(){
+ const el=document.getElementById("evidenceList"); if(!el) return;
+ if(!evidences.length){el.innerHTML='<p class="muted">Nenhuma evidência salva.</p>';return;}
+ el.innerHTML=evidences.map((e,i)=>`<div class="queueItem"><strong>Evidência ${String(i+1).padStart(2,"0")}</strong><br><img class="photoThumb" src="${e.image}"><br><span class="tiny">${new Date(e.time).toLocaleString("pt-BR")}</span><br><span class="tiny">GPS: ${e.lat?Number(e.lat).toFixed(7):"--"}, ${e.lng?Number(e.lng).toFixed(7):"--"} ${e.acc?"• ±"+Number(e.acc).toFixed(1)+" m":""}</span><p class="muted">${e.comment||"Sem comentário"}</p><span class="tiny">Responsável: ${e.author||"--"}</span><br><br><button class="btn small danger" onclick="removeEvidence(${i})">Remover</button></div>`).join("");
+}
+function openTimestampCamera(){
+ if(window.RedeCalcAndroid && RedeCalcAndroid.openTimestampCamera){RedeCalcAndroid.openTimestampCamera();return;}
+ window.open("intent://#Intent;action=android.media.action.IMAGE_CAPTURE;end");
+}
+function resizeSignatureCanvas(){
+ const c=document.getElementById("signatureCanvas"); if(!c) return;
+ const rect=c.getBoundingClientRect(); if(rect.width>0){const old=c.toDataURL(); c.width=Math.round(rect.width); c.height=160; const img=new Image(); img.onload=()=>c.getContext("2d").drawImage(img,0,0,c.width,c.height); img.src=old;}
+}
+function initSignatureCanvas(){
+ const c=document.getElementById("signatureCanvas"); if(!c || c.dataset.ready) return; c.dataset.ready="1";
+ const ctx=c.getContext("2d"); ctx.lineWidth=3; ctx.lineCap="round"; ctx.strokeStyle="#111"; let drawing=false;
+ const pos=(ev)=>{const r=c.getBoundingClientRect(); const t=ev.touches?ev.touches[0]:ev; return {x:t.clientX-r.left,y:t.clientY-r.top};};
+ const start=(ev)=>{drawing=true; const p=pos(ev); ctx.beginPath(); ctx.moveTo(p.x,p.y); ev.preventDefault();};
+ const move=(ev)=>{if(!drawing)return; const p=pos(ev); ctx.lineTo(p.x,p.y); ctx.stroke(); ev.preventDefault();};
+ const end=()=>{drawing=false;};
+ c.addEventListener("mousedown",start); c.addEventListener("mousemove",move); window.addEventListener("mouseup",end);
+ c.addEventListener("touchstart",start,{passive:false}); c.addEventListener("touchmove",move,{passive:false}); c.addEventListener("touchend",end);
+ renderSignature();
+}
+function clearSignature(){const c=document.getElementById("signatureCanvas"); if(c)c.getContext("2d").clearRect(0,0,c.width,c.height);}
+function saveSignature(){
+ const c=document.getElementById("signatureCanvas"); if(!c)return;
+ signatureData={name:signatureName.value.trim(),role:signatureRole.value,image:c.toDataURL("image/png"),time:new Date().toISOString()};
+ localStorage.setItem("redecalc_signature",JSON.stringify(signatureData)); renderSignature(); alert("Assinatura salva.");
+}
+function renderSignature(){
+ if(document.getElementById("signatureName")){signatureName.value=signatureData.name||signatureName.value||""; signatureRole.value=signatureData.role||signatureRole.value||"Encarregado";}
+ const el=document.getElementById("signaturePreview"); if(!el)return;
+ el.innerHTML=signatureData.image?`<div class="queueItem"><strong>${signatureData.name||"Responsável"}</strong><br><span class="tiny">${signatureData.role||""} • ${signatureData.time?new Date(signatureData.time).toLocaleString("pt-BR"):""}</span><br><img class="photoThumb" style="background:#fff;object-fit:contain" src="${signatureData.image}"></div>`:'<p class="muted">Nenhuma assinatura salva.</p>';
+}
+
+function renderAll(){renderMap();renderDistances();renderPoints();renderMaterials();renderDB();renderEvidences();renderSignature();initSignatureCanvas();updateLiveDistance();}
+fillSelects();loadSheetData();renderAll();if('serviceWorker' in navigator){navigator.serviceWorker.register('service-worker.js').catch(()=>{});}
+</script>
+<div id="pdfPrintArea" style="display:none"></div>
+</body>
+</html>
