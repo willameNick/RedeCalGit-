@@ -1,19 +1,32 @@
-# RedeCalc Pro GPS
+# RedeCal Pro GPS
 
-Versão atualizada com:
+Aplicativo web para GitHub Pages com:
 
-- Apenas a opção **Salvar PDF**.
-- Remoção de CSV, JSON, DXF, copiar coordenadas e `window.print()`.
-- Linha de MT em vermelho tracejado.
-- Linha de BT em azul contínuo.
-- Quando o trecho tiver MT + BT, aparecem as duas linhas.
-- Cálculo de distância entre pontos e distância total.
-- Memorial PDF com pontos, coordenadas, rede, estrutura, cabo MT, distância e lista de materiais.
+- Mapa interativo com Leaflet/OpenStreetMap
+- Marcação de pontos por clique, GPS ou coordenadas manuais
+- Desenho de rede MT com linha vermelha tracejada
+- Desenho de rede BT com linha vermelha contínua
+- Cabo de baixa tensão com linha azul contínua
+- Medição de distância entre pontos e distância total
+- Seleção de cabo MT: 2 AWG, 1/0 AWG, 4/0 AWG, 336 MCM
+- Seleção de cabo BT multiplexado
+- Estruturas MT e BT, incluindo S1, S3 e S4
+- Lista automática de materiais
+- Exportação somente em PDF
+- Salvamento local do projeto no navegador
 
-## Arquivos principais
+## Como publicar no GitHub Pages
 
-- `index.html`
-- `style.css`
-- `app.js`
+1. Extraia o arquivo ZIP.
+2. Envie `index.html`, `style.css`, `script.js` e `README.md` para o repositório.
+3. No GitHub, acesse **Settings > Pages**.
+4. Em **Build and deployment**, selecione:
+   - Source: Deploy from a branch
+   - Branch: main
+   - Folder: /root
+5. Clique em Save.
 
-Envie esses arquivos para o GitHub substituindo os arquivos antigos do projeto.
+## Observações
+
+- O GPS só funciona em HTTPS, por isso funciona no GitHub Pages.
+- O PDF é gerado sem depender de captura do mapa, evitando erro comum em celulares e WebView.

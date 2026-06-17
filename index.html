@@ -3,92 +3,126 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>RedeCalc Pro GPS</title>
-
+  <title>RedeCal Pro GPS</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="stylesheet" href="style.css" />
-
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
-  <header>
-    <h1>RedeCalc Pro GPS</h1>
-    <p>Projeto de rede MT/BT com GPS, distância e PDF</p>
+  <header class="topbar">
+    <div>
+      <h1>RedeCal Pro GPS</h1>
+      <p>Projeto de rede elétrica MT/BT com GPS, medição, materiais e PDF</p>
+    </div>
+    <button id="btnSalvarPdf" class="primary">Salvar PDF</button>
   </header>
 
-  <main>
-    <section class="painel">
-      <div class="linha">
-        <label>Nome do ponto</label>
-        <input id="nomePonto" type="text" placeholder="Ex: P1" />
-      </div>
+  <main class="layout">
+    <section class="panel">
+      <h2>Dados do projeto</h2>
+      <label>Nome do projeto<input id="nomeProjeto" value="Projeto RedeCal Pro" /></label>
+      <label>Localidade<input id="localProjeto" value="Angical do Piauí - PI" /></label>
+      <label>Responsável<input id="responsavel" value="Willame Nicollas Batista da Silva" /></label>
 
-      <div class="linha">
-        <label>Tipo de rede</label>
+      <h2>Rede</h2>
+      <label>Tipo de trecho
         <select id="tipoRede">
-          <option value="MT">MT - Média tensão</option>
-          <option value="BT">BT - Baixa tensão</option>
-          <option value="MT+BT">MT + BT</option>
+          <option value="MT">Média tensão - MT</option>
+          <option value="BT">Baixa tensão - BT</option>
+          <option value="MTBT">MT + BT no mesmo trecho</option>
         </select>
-      </div>
+      </label>
 
-      <div class="linha">
-        <label>Cabo MT</label>
+      <label>Cabo MT
         <select id="caboMT">
-          <option value="2 AWG">2 AWG</option>
-          <option value="1/0 AWG">1/0 AWG</option>
-          <option value="4/0 AWG">4/0 AWG</option>
-          <option value="336 mm²">336 mm²</option>
+          <option>2 AWG</option>
+          <option>1/0 AWG</option>
+          <option>4/0 AWG</option>
+          <option>336 MCM</option>
         </select>
-      </div>
+      </label>
 
-      <div class="linha">
-        <label>Estrutura</label>
+      <label>Cabo BT
+        <select id="caboBT">
+          <option>Multiplexado 1x16 mm²</option>
+          <option>Multiplexado 1x25 mm²</option>
+          <option>Multiplexado 1x35 mm²</option>
+          <option>Multiplexado 1x50 mm²</option>
+          <option>Multiplexado 3x35+35 mm²</option>
+          <option>Multiplexado 3x50+50 mm²</option>
+        </select>
+      </label>
+
+      <label>Estrutura
         <select id="estrutura">
-          <option value="N1">N1</option>
-          <option value="S1">S1 - Baixa tensão</option>
-          <option value="S3">S3 - Baixa tensão</option>
-          <option value="S4">S4 - Baixa tensão</option>
-          <option value="CE2">CE2</option>
+          <option value="N1">N1 - Estrutura MT simples</option>
+          <option value="N2">N2 - Estrutura MT ancoragem</option>
+          <option value="N3">N3 - Estrutura MT derivação</option>
+          <option value="S1">S1 - BT simples</option>
+          <option value="S3">S3 - BT ancoragem</option>
+          <option value="S4">S4 - BT final/olhal</option>
         </select>
+      </label>
+
+      <div class="actions">
+        <button id="btnGps">Usar GPS atual</button>
+        <button id="btnManual">Adicionar ponto manual</button>
+        <button id="btnDesfazer">Desfazer</button>
+        <button id="btnLimpar" class="danger">Limpar</button>
       </div>
 
-      <div class="linha">
-        <label>Tipo do poste</label>
-        <input id="tipoPoste" type="text" placeholder="Ex: 9/300 daN" />
-      </div>
-
-      <div class="linha botoes">
-        <button onclick="adicionarPontoGPS()">Adicionar ponto GPS</button>
-        <button onclick="adicionarPontoManual()">Adicionar ponto manual</button>
-        <button onclick="limparProjeto()" class="secundario">Limpar projeto</button>
-      </div>
-
-      <div class="linha exportar">
-        <button id="btnSalvarPDF" onclick="salvarPDF()">Salvar PDF</button>
-      </div>
-
-      <div class="resumo">
-        <strong>Distância total:</strong>
-        <span id="distanciaTotal">0,00 m</span>
-      </div>
+      <p class="hint">Clique no mapa para inserir ponto. Para GPS funcionar, o navegador precisa de permissão de localização e HTTPS.</p>
     </section>
 
-    <section class="mapa-wrap">
+    <section class="map-wrap">
       <div id="map"></div>
-      <div class="legenda-mapa">
-        <div><span class="linha-mt">━ ━ ━</span> Média Tensão - MT</div>
-        <div><span class="linha-bt">━━━━</span> Baixa Tensão - BT</div>
+      <div class="legend">
+        <span><i class="mt"></i>MT vermelha tracejada</span>
+        <span><i class="bt"></i>BT vermelha contínua</span>
+        <span><i class="btblue"></i>Cabo BT azul contínuo</span>
       </div>
     </section>
 
-    <section class="lista">
-      <h2>Pontos do projeto</h2>
-      <div id="listaPontos"></div>
+    <section class="panel results">
+      <h2>Resumo</h2>
+      <div class="cards">
+        <div><strong id="qtdPontos">0</strong><small>pontos</small></div>
+        <div><strong id="distTotal">0 m</strong><small>distância total</small></div>
+      </div>
+
+      <h2>Pontos</h2>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>#</th><th>Estrutura</th><th>Rede</th><th>Dist.</th></tr></thead>
+          <tbody id="tbodyPontos"></tbody>
+        </table>
+      </div>
+
+      <h2>Lista de materiais</h2>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>Material</th><th>Qtd.</th></tr></thead>
+          <tbody id="tbodyMateriais"></tbody>
+        </table>
+      </div>
     </section>
   </main>
 
-  <script src="app.js"></script>
+  <template id="manualDialogTpl">
+    <dialog id="manualDialog">
+      <form method="dialog">
+        <h2>Adicionar ponto manual</h2>
+        <label>Latitude<input id="latManual" type="number" step="any" placeholder="Ex.: -6.078696" required /></label>
+        <label>Longitude<input id="lngManual" type="number" step="any" placeholder="Ex.: -42.735803" required /></label>
+        <menu>
+          <button value="cancel">Cancelar</button>
+          <button id="confirmManual" value="default" class="primary">Adicionar</button>
+        </menu>
+      </form>
+    </dialog>
+  </template>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>
