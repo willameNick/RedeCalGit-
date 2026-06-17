@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RedeCalc Pro GPS</title>
+
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="style.css" />
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body>
+  <header>
+    <h1>RedeCalc Pro GPS</h1>
+    <p>Projeto de rede MT/BT com GPS, distância e PDF</p>
+  </header>
+
+  <main>
+    <section class="painel">
+      <div class="linha">
+        <label>Nome do ponto</label>
+        <input id="nomePonto" type="text" placeholder="Ex: P1" />
+      </div>
+
+      <div class="linha">
+        <label>Tipo de rede</label>
+        <select id="tipoRede">
+          <option value="MT">MT - Média tensão</option>
+          <option value="BT">BT - Baixa tensão</option>
+          <option value="MT+BT">MT + BT</option>
+        </select>
+      </div>
+
+      <div class="linha">
+        <label>Cabo MT</label>
+        <select id="caboMT">
+          <option value="2 AWG">2 AWG</option>
+          <option value="1/0 AWG">1/0 AWG</option>
+          <option value="4/0 AWG">4/0 AWG</option>
+          <option value="336 mm²">336 mm²</option>
+        </select>
+      </div>
+
+      <div class="linha">
+        <label>Estrutura</label>
+        <select id="estrutura">
+          <option value="N1">N1</option>
+          <option value="S1">S1 - Baixa tensão</option>
+          <option value="S3">S3 - Baixa tensão</option>
+          <option value="S4">S4 - Baixa tensão</option>
+          <option value="CE2">CE2</option>
+        </select>
+      </div>
+
+      <div class="linha">
+        <label>Tipo do poste</label>
+        <input id="tipoPoste" type="text" placeholder="Ex: 9/300 daN" />
+      </div>
+
+      <div class="linha botoes">
+        <button onclick="adicionarPontoGPS()">Adicionar ponto GPS</button>
+        <button onclick="adicionarPontoManual()">Adicionar ponto manual</button>
+        <button onclick="limparProjeto()" class="secundario">Limpar projeto</button>
+      </div>
+
+      <div class="linha exportar">
+        <button id="btnSalvarPDF" onclick="salvarPDF()">Salvar PDF</button>
+      </div>
+
+      <div class="resumo">
+        <strong>Distância total:</strong>
+        <span id="distanciaTotal">0,00 m</span>
+      </div>
+    </section>
+
+    <section class="mapa-wrap">
+      <div id="map"></div>
+      <div class="legenda-mapa">
+        <div><span class="linha-mt">━ ━ ━</span> Média Tensão - MT</div>
+        <div><span class="linha-bt">━━━━</span> Baixa Tensão - BT</div>
+      </div>
+    </section>
+
+    <section class="lista">
+      <h2>Pontos do projeto</h2>
+      <div id="listaPontos"></div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
