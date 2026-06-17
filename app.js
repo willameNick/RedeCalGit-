@@ -1,339 +1,72 @@
-let map;
-let pontos = [];
-let marcadores = [];
-let linhasMT = [];
-let linhasBT = [];
-
-const materiaisEstruturas = {
-  S1: [
-    "1 armação simples",
-    "1 parafuso 16x250 mm",
-    "1 isolador roldana",
-    "1 arruela"
-  ],
-  S3: [
-    "1 parafuso olhal 16x250 mm",
-    "2 arruelas"
-  ],
-  S4: [
-    "1 parafuso olhal 16x250 mm",
-    "2 arruelas",
-    "1 porca olhal"
-  ],
-  N1: ["Estrutura primária N1"],
-  CE2: ["Estrutura CE2"]
+const $=id=>document.getElementById(id);
+const estruturas={
+ primarias:['N1','N2','N3','N4','N3-N3','N3-N4','N4-N4','CE1','CE1A','CE2','CE3','CE4','U1','U2','U3','U3-U3','U4'],
+ secundarias:['S1','S3','S4']
 };
-
-window.addEventListener("load", iniciarMapa);
-
-function iniciarMapa() {
-  map = L.map("map").setView([-6.078696, -42.735803], 16);
-
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    maxZoom: 22,
-    attribution: "© OpenStreetMap"
-  }).addTo(map);
-
-  map.on("click", function (e) {
-    adicionarPonto(e.latlng.lat, e.latlng.lng);
-  });
-
-  carregarProjetoLocal();
+const mat={
+ 'N1':['Cruzeta/conjunto primário','Isoladores pino','Parafusos e arruelas','Amarração MT'],
+ 'N2':['Cruzeta dupla','Isoladores pino','Ferragens N2','Amarrações MT'],
+ 'N3':['Estrutura de ancoragem','Isoladores suspensão/ancoragem','Grampo de ancoragem','Ferragens N3'],
+ 'N4':['Estrutura fim de linha','Isoladores de ancoragem','Grampo de ancoragem','Estai/contraposte quando necessário'],
+ 'N3-N3':['Dupla ancoragem N3','Ferragens de derivação','Isoladores de ancoragem'],
+ 'N3-N4':['Ancoragem N3 + fim de linha N4','Ferragens completas','Isoladores'],
+ 'N4-N4':['Duplo fim de linha N4','Ferragens completas','Isoladores'],
+ 'CE1':['Chave fusível/estrutura CE1','Para-raios quando aplicável','Ferragens'],
+ 'CE1A':['Estrutura CE1A','Chave fusível','Ferragens'],
+ 'CE2':['Estrutura CE2','Chave faca/seccionadora','Ferragens'],
+ 'CE3':['Estrutura CE3','Chave seccionadora','Ferragens'],
+ 'CE4':['Estrutura CE4','Chaves e ferragens'],
+ 'U1':['Estrutura urbana U1','Isoladores','Ferragens'],
+ 'U2':['Estrutura urbana U2','Isoladores','Ferragens'],
+ 'U3':['Estrutura urbana U3','Isoladores de ancoragem','Ferragens'],
+ 'U3-U3':['Dupla ancoragem urbana U3-U3','Ferragens'],
+ 'U4':['Estrutura urbana U4 fim de linha','Ferragens'],
+ 'S1':['1 armação simples','1 parafuso 16x250 mm','1 isolador roldana','1 arruela'],
+ 'S3':['1 parafuso olhal 16x250 mm','2 arruelas','Conjunto de ancoragem BT'],
+ 'S4':['1 parafuso olhal 16x250 mm','2 arruelas','1 porca olhal','Conjunto de fim de linha BT']
+};
+const cabosMT=['2 AWG','1/0 AWG','4/0 AWG','336 MCM','XLPE 35 mm²','XLPE 50 mm²','XLPE 70 mm²','XLPE 185 mm²'];
+const cabosBT=['Monofásico 2×35 mm²','Trifásico 4×35 mm²','Trifásico 4×70 mm²','Trifásico 4×120 mm²'];
+const equipamentos=['Nenhum','Transformador 15 kVA','Transformador 30 kVA','Transformador 45 kVA','Transformador 75 kVA','Transformador 112,5 kVA','Transformador 150 kVA','Transformador 225 kVA','Transformador 300 kVA','Chave fusível','Chave faca','Chave seccionadora'];
+let pontos=JSON.parse(localStorage.pontosRedeCalc||'[]'), fotos=JSON.parse(localStorage.fotosRedeCalc||'[]'), folderHandle=null, watchId=null;
+function init(){
+  cabosMT.forEach(x=>$('caboMT').add(new Option(x,x))); cabosBT.forEach(x=>$('caboBT').add(new Option(x,x))); equipamentos.forEach(x=>$('equipamento').add(new Option(x,x)));
+  updateEstruturas(); ['networkType'].forEach(id=>$(id).onchange=updateEstruturas);
+  $('btnGps').onclick=addGps; $('btnWatch').onclick=toggleWatch; $('btnManual').onclick=addManual; $('btnClear').onclick=clearAll; $('btnPhoto').onclick=()=>$('photoInput').click(); $('photoInput').onchange=addPhoto;
+  $('btnFolder').onclick=chooseFolder; $('pdfPrancha').onclick=()=>pdfPrancha(); $('pdfMemorial').onclick=()=>pdfMemorial(); $('pdfMateriais').onclick=()=>pdfMateriais(); $('pdfEvidencias').onclick=()=>pdfEvidencias();
+  $('exportCsv').onclick=exportCSV; $('exportJson').onclick=exportJSON; $('exportDxf').onclick=exportDXF; $('btnClearSign').onclick=clearSign;
+  setupSignature(); draw(); render(); if('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');
 }
-
-function adicionarPontoGPS() {
-  if (!navigator.geolocation) {
-    alert("GPS não disponível neste aparelho.");
-    return;
-  }
-
-  navigator.geolocation.getCurrentPosition(
-    function (pos) {
-      adicionarPonto(pos.coords.latitude, pos.coords.longitude);
-      map.setView([pos.coords.latitude, pos.coords.longitude], 18);
-    },
-    function () {
-      alert("Não foi possível obter a localização GPS.");
-    },
-    { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
-  );
-}
-
-function adicionarPontoManual() {
-  alert("Toque no mapa no local onde deseja adicionar o ponto.");
-}
-
-function adicionarPonto(lat, lng) {
-  const numero = pontos.length + 1;
-  const nome = document.getElementById("nomePonto").value.trim() || `P${numero}`;
-
-  const ponto = {
-    nome,
-    lat,
-    lng,
-    tipoRede: document.getElementById("tipoRede").value,
-    caboMT: document.getElementById("caboMT").value,
-    estrutura: document.getElementById("estrutura").value,
-    tipoPoste: document.getElementById("tipoPoste").value.trim() || "-",
-    distanciaAnterior: 0
-  };
-
-  if (pontos.length > 0) {
-    const anterior = pontos[pontos.length - 1];
-    ponto.distanciaAnterior = calcularDistancia(anterior.lat, anterior.lng, ponto.lat, ponto.lng);
-  }
-
-  pontos.push(ponto);
-  document.getElementById("nomePonto").value = "";
-
-  atualizarProjeto();
-}
-
-function atualizarProjeto() {
-  desenharMarcadores();
-  desenharRede();
-  atualizarListaPontos();
-  atualizarDistanciaTotal();
-  salvarProjetoLocal();
-}
-
-function desenharMarcadores() {
-  marcadores.forEach(marcador => map.removeLayer(marcador));
-  marcadores = [];
-
-  pontos.forEach((ponto, index) => {
-    const marcador = L.marker([ponto.lat, ponto.lng]).addTo(map);
-    marcador.bindPopup(`
-      <strong>${ponto.nome}</strong><br>
-      Rede: ${ponto.tipoRede}<br>
-      Estrutura: ${ponto.estrutura}<br>
-      Poste: ${ponto.tipoPoste}<br>
-      Cabo MT: ${ponto.caboMT}<br>
-      Distância anterior: ${ponto.distanciaAnterior.toFixed(2)} m
-    `);
-    marcadores.push(marcador);
-  });
-}
-
-function limparLinhasRede() {
-  linhasMT.forEach(linha => map.removeLayer(linha));
-  linhasBT.forEach(linha => map.removeLayer(linha));
-  linhasMT = [];
-  linhasBT = [];
-}
-
-function desenharRede() {
-  limparLinhasRede();
-
-  if (!pontos || pontos.length < 2) return;
-
-  for (let i = 0; i < pontos.length - 1; i++) {
-    const p1 = pontos[i];
-    const p2 = pontos[i + 1];
-
-    const coords = [
-      [p1.lat, p1.lng],
-      [p2.lat, p2.lng]
-    ];
-
-    const temMT =
-      p1.tipoRede === "MT" ||
-      p2.tipoRede === "MT" ||
-      p1.tipoRede === "MT+BT" ||
-      p2.tipoRede === "MT+BT";
-
-    const temBT =
-      p1.tipoRede === "BT" ||
-      p2.tipoRede === "BT" ||
-      p1.tipoRede === "MT+BT" ||
-      p2.tipoRede === "MT+BT";
-
-    if (temMT) {
-      const linhaMT = L.polyline(coords, {
-        color: "red",
-        weight: 4,
-        dashArray: "10, 10",
-        opacity: 0.9
-      }).addTo(map);
-      linhasMT.push(linhaMT);
-    }
-
-    if (temBT) {
-      const linhaBT = L.polyline(coords, {
-        color: "blue",
-        weight: 4,
-        opacity: 0.9
-      }).addTo(map);
-      linhasBT.push(linhaBT);
-    }
-  }
-}
-
-function atualizarListaPontos() {
-  const lista = document.getElementById("listaPontos");
-
-  if (pontos.length === 0) {
-    lista.innerHTML = "Nenhum ponto adicionado.";
-    return;
-  }
-
-  lista.innerHTML = pontos.map((p, i) => `
-    <div class="item-ponto">
-      <strong>${i + 1}. ${p.nome}</strong><br>
-      Rede: ${p.tipoRede} | Estrutura: ${p.estrutura} | Poste: ${p.tipoPoste}<br>
-      Cabo MT: ${p.caboMT}<br>
-      Coordenadas: ${p.lat.toFixed(6)}, ${p.lng.toFixed(6)}<br>
-      Distância anterior: ${p.distanciaAnterior.toFixed(2)} m
-    </div>
-  `).join("");
-}
-
-function atualizarDistanciaTotal() {
-  const total = pontos.reduce((soma, p) => soma + Number(p.distanciaAnterior || 0), 0);
-  document.getElementById("distanciaTotal").textContent = `${total.toFixed(2)} m`;
-}
-
-function calcularDistancia(lat1, lon1, lat2, lon2) {
-  const R = 6371000;
-  const rad = Math.PI / 180;
-  const dLat = (lat2 - lat1) * rad;
-  const dLon = (lon2 - lon1) * rad;
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(lat1 * rad) * Math.cos(lat2 * rad) *
-    Math.sin(dLon / 2) * Math.sin(dLon / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c;
-}
-
-function gerarListaMateriais() {
-  const materiais = {};
-
-  pontos.forEach(ponto => {
-    const itens = materiaisEstruturas[ponto.estrutura] || [];
-    itens.forEach(item => {
-      materiais[item] = (materiais[item] || 0) + 1;
-    });
-  });
-
-  return materiais;
-}
-
-async function salvarPDF() {
-  const { jsPDF } = window.jspdf;
-  const pdf = new jsPDF("p", "mm", "a4");
-
-  const margem = 15;
-  let y = 18;
-
-  pdf.setFont("helvetica", "bold");
-  pdf.setFontSize(16);
-  pdf.text("RedeCalc Pro GPS", margem, y);
-
-  y += 8;
-  pdf.setFontSize(12);
-  pdf.text("Memorial Descritivo do Projeto", margem, y);
-
-  y += 10;
-  pdf.setFont("helvetica", "normal");
-  pdf.setFontSize(10);
-  pdf.text(`Data: ${new Date().toLocaleDateString("pt-BR")}`, margem, y);
-
-  y += 7;
-  const distanciaTotal = pontos.reduce((soma, p) => soma + Number(p.distanciaAnterior || 0), 0);
-  pdf.text(`Distância total: ${distanciaTotal.toFixed(2)} m`, margem, y);
-
-  y += 10;
-  pdf.setFont("helvetica", "bold");
-  pdf.text("Legenda:", margem, y);
-  y += 6;
-  pdf.setFont("helvetica", "normal");
-  pdf.text("MT: linha vermelha tracejada", margem, y);
-  y += 5;
-  pdf.text("BT: linha azul contínua", margem, y);
-
-  y += 10;
-  pdf.setFont("helvetica", "bold");
-  pdf.text("Pontos do Projeto", margem, y);
-  y += 8;
-
-  if (pontos.length === 0) {
-    pdf.setFont("helvetica", "normal");
-    pdf.text("Nenhum ponto cadastrado.", margem, y);
-  } else {
-    pontos.forEach((ponto, index) => {
-      if (y > 270) {
-        pdf.addPage();
-        y = 18;
-      }
-
-      pdf.setFont("helvetica", "bold");
-      pdf.text(`${index + 1}. ${ponto.nome}`, margem, y);
-      y += 5;
-
-      pdf.setFont("helvetica", "normal");
-      pdf.text(`Rede: ${ponto.tipoRede} | Estrutura: ${ponto.estrutura} | Poste: ${ponto.tipoPoste}`, margem, y);
-      y += 5;
-      pdf.text(`Cabo MT: ${ponto.caboMT}`, margem, y);
-      y += 5;
-      pdf.text(`Coordenadas: ${ponto.lat.toFixed(6)}, ${ponto.lng.toFixed(6)}`, margem, y);
-      y += 5;
-      pdf.text(`Distância do ponto anterior: ${ponto.distanciaAnterior.toFixed(2)} m`, margem, y);
-      y += 8;
-    });
-  }
-
-  if (y > 230) {
-    pdf.addPage();
-    y = 18;
-  }
-
-  y += 5;
-  pdf.setFont("helvetica", "bold");
-  pdf.text("Lista de Materiais Consolidada", margem, y);
-  y += 8;
-
-  const materiais = gerarListaMateriais();
-  pdf.setFont("helvetica", "normal");
-
-  if (Object.keys(materiais).length === 0) {
-    pdf.text("Nenhum material calculado.", margem, y);
-  } else {
-    Object.entries(materiais).forEach(([item, qtd]) => {
-      if (y > 275) {
-        pdf.addPage();
-        y = 18;
-      }
-      pdf.text(`${qtd}x - ${item}`, margem, y);
-      y += 6;
-    });
-  }
-
-  pdf.save("memorial-redecalc-pro-gps.pdf");
-}
-
-function salvarProjetoLocal() {
-  localStorage.setItem("redecalc_pontos", JSON.stringify(pontos));
-}
-
-function carregarProjetoLocal() {
-  const salvo = localStorage.getItem("redecalc_pontos");
-  if (salvo) {
-    pontos = JSON.parse(salvo);
-    atualizarProjeto();
-
-    if (pontos.length > 0) {
-      const ultimo = pontos[pontos.length - 1];
-      map.setView([ultimo.lat, ultimo.lng], 17);
-    }
-  } else {
-    atualizarListaPontos();
-  }
-}
-
-function limparProjeto() {
-  if (!confirm("Deseja apagar todo o projeto?")) return;
-  pontos = [];
-  localStorage.removeItem("redecalc_pontos");
-  atualizarProjeto();
-}
+function updateEstruturas(){ $('estrutura').innerHTML=''; const arr=$('networkType').value==='MT'?estruturas.primarias:estruturas.secundarias; arr.forEach(x=>$('estrutura').add(new Option(x,x))); }
+function save(){localStorage.pontosRedeCalc=JSON.stringify(pontos); localStorage.fotosRedeCalc=JSON.stringify(fotos)}
+function posText(p){return `${p.lat.toFixed(6)}, ${p.lng.toFixed(6)}`}
+function hav(a,b){let R=6371000,dLat=(b.lat-a.lat)*Math.PI/180,dLon=(b.lng-a.lng)*Math.PI/180,la1=a.lat*Math.PI/180,la2=b.lat*Math.PI/180;let x=Math.sin(dLat/2)**2+Math.cos(la1)*Math.cos(la2)*Math.sin(dLon/2)**2;return 2*R*Math.asin(Math.sqrt(x))}
+function total(){return pontos.reduce((s,p,i)=>i?s+hav(pontos[i-1],p):0,0)}
+function novoPonto(lat,lng){let i=pontos.length+1; let p={id:Date.now(),nome:$('pointName').value||`P${String(i).padStart(2,'0')}`,lat,lng,rede:$('networkType').value,estrutura:$('estrutura').value,poste:$('poste').value,caboMT:$('caboMT').value,caboBT:$('caboBT').value,equip:$('equipamento').value,coment:$('comentario').value,data:new Date().toLocaleString('pt-BR')}; pontos.push(p); $('pointName').value=`P${String(i+1).padStart(2,'0')}`; save(); draw(); render();}
+function addGps(){ if(!navigator.geolocation) return alert('GPS não disponível.'); navigator.geolocation.getCurrentPosition(p=>novoPonto(p.coords.latitude,p.coords.longitude),e=>alert('Erro GPS: '+e.message),{enableHighAccuracy:true,timeout:15000});}
+function toggleWatch(){ if(watchId){navigator.geolocation.clearWatch(watchId);watchId=null;$('btnWatch').textContent='Iniciar GPS em tempo real';return} if(!navigator.geolocation)return alert('GPS não disponível.'); watchId=navigator.geolocation.watchPosition(p=>{$('lastPos').textContent=`${p.coords.latitude.toFixed(6)}, ${p.coords.longitude.toFixed(6)} ±${Math.round(p.coords.accuracy)}m`;},e=>alert('Erro GPS: '+e.message),{enableHighAccuracy:true}); $('btnWatch').textContent='Parar GPS em tempo real';}
+function addManual(){let lat=parseFloat($('latManual').value),lng=parseFloat($('lngManual').value); if(!isFinite(lat)||!isFinite(lng))return alert('Informe latitude e longitude.'); novoPonto(lat,lng)}
+function clearAll(){if(confirm('Limpar todos os pontos e fotos?')){pontos=[];fotos=[];save();draw();render();}}
+function bounds(){ if(!pontos.length)return null; let lats=pontos.map(p=>p.lat),lngs=pontos.map(p=>p.lng); return {minLat:Math.min(...lats),maxLat:Math.max(...lats),minLng:Math.min(...lngs),maxLng:Math.max(...lngs)} }
+function xy(p,w,h,pad=55){let b=bounds(); if(!b)return [w/2,h/2]; let dx=b.maxLng-b.minLng||0.001,dy=b.maxLat-b.minLat||0.001; return [pad+(p.lng-b.minLng)/dx*(w-2*pad), h-pad-(p.lat-b.minLat)/dy*(h-2*pad)]}
+function draw(){let c=$('map'),ctx=c.getContext('2d'),w=c.width,h=c.height; ctx.clearRect(0,0,w,h); ctx.fillStyle='#f7fbff';ctx.fillRect(0,0,w,h); ctx.strokeStyle='#dbeafe';ctx.lineWidth=1; for(let x=0;x<w;x+=50){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,h);ctx.stroke()} for(let y=0;y<h;y+=50){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke()} if(pontos.length>1){for(let i=1;i<pontos.length;i++){let a=xy(pontos[i-1],w,h),b=xy(pontos[i],w,h),rede=pontos[i].rede;ctx.beginPath();ctx.moveTo(...a);ctx.lineTo(...b);ctx.lineWidth=4;ctx.strokeStyle=rede==='MT'?'#d71920':'#0057d9';ctx.setLineDash(rede==='MT'?[18,12]:[]);ctx.stroke();ctx.setLineDash([]);let mx=(a[0]+b[0])/2,my=(a[1]+b[1])/2;ctx.fillStyle='#111827';ctx.font='16px Arial';ctx.fillText(`${hav(pontos[i-1],pontos[i]).toFixed(1)} m`,mx+5,my-5)}} pontos.forEach((p,i)=>{let [x,y]=xy(p,w,h);ctx.fillStyle=p.poste.includes('existente')?'#111':'#fff';ctx.strokeStyle='#111';ctx.lineWidth=3;ctx.beginPath();ctx.arc(x,y,13,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.fillStyle=p.poste.includes('existente')?'#fff':'#111';ctx.font='bold 14px Arial';ctx.textAlign='center';ctx.fillText(i+1,x,y+5);ctx.textAlign='left';ctx.fillStyle='#111827';ctx.font='14px Arial';ctx.fillText(`${p.nome} ${p.estrutura}`,x+16,y-10); if(p.equip!=='Nenhum'){ctx.fillStyle='#f59e0b';ctx.fillRect(x+16,y+2,16,16);ctx.fillStyle='#111';ctx.fillText(p.equip.replace('Transformador ','TR '),x+36,y+16)}}); $('totalDist').textContent=total().toFixed(1)+' m';}
+function render(){let html='<tr><th>#</th><th>Ponto</th><th>Rede</th><th>Estrutura</th><th>Poste</th><th>Equip.</th><th>Cabo</th><th>Coordenadas</th><th>Trecho</th><th>Ação</th></tr>'; pontos.forEach((p,i)=>{html+=`<tr><td>${i+1}</td><td>${p.nome}</td><td>${p.rede}</td><td>${p.estrutura}</td><td>${p.poste}</td><td>${p.equip}</td><td>${p.rede==='MT'?p.caboMT:p.caboBT}</td><td>${posText(p)}</td><td>${i?hav(pontos[i-1],p).toFixed(1):'0'} m</td><td><button onclick="delPoint(${i})">Excluir</button></td></tr>`}); $('pointsTable').innerHTML=html; $('photos').innerHTML=fotos.map((f,i)=>`<div class="photo"><img src="${f.img}"><div><b>${f.nome}</b><br>${f.data}<br>${f.coord||''}<br><input value="${f.coment||''}" onchange="fotos[${i}].coment=this.value;save()" placeholder="Comentário"></div><button onclick="fotos.splice(${i},1);save();render()">Excluir</button></div>`).join('')}
+function delPoint(i){pontos.splice(i,1);save();draw();render()}
+async function addPhoto(ev){let file=ev.target.files[0]; if(!file)return; let data=await fileToData(file); let coord=pontos.length?posText(pontos[pontos.length-1]):''; let f={nome:file.name,data:new Date().toLocaleString('pt-BR'),coord,resp:$('responsavel').value,coment:'',img:data}; fotos.push(f); save(); render(); ev.target.value=''}
+function fileToData(file){return new Promise(r=>{let fr=new FileReader();fr.onload=()=>r(fr.result);fr.readAsDataURL(file)})}
+async function chooseFolder(){ if(!window.showDirectoryPicker) return alert('Seu navegador não permite escolher pasta. Os arquivos serão baixados normalmente.'); folderHandle=await showDirectoryPicker(); alert('Pasta selecionada.')}
+async function saveBlob(name,blob){ if(folderHandle){let h=await folderHandle.getFileHandle(name,{create:true});let w=await h.createWritable();await w.write(blob);await w.close();return} let a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
+function esc(s){return String(s||'').replace(/[\\()]/g,'\\$&').replace(/[\r\n]/g,' ')}
+class PDF{constructor(){this.pages=[];this.images=[];this.w=595;this.h=842} addPage(){this.ops=[];this.pages.push(this.ops);return this} text(x,y,t,size=11){this.ops.push(`BT /F1 ${size} Tf ${x} ${this.h-y} Td (${esc(t)}) Tj ET`)} line(x1,y1,x2,y2,dash=false){this.ops.push(`${dash?'[6 4] 0 d':'[] 0 d'} ${x1} ${this.h-y1} m ${x2} ${this.h-y2} l S`)} rect(x,y,w,h){this.ops.push(`${x} ${this.h-y-h} ${w} ${h} re S`)} image(data,x,y,w,h){let m=data.match(/^data:image\/(jpeg|jpg);base64,(.*)$/); if(!m)return; let name='Im'+(this.images.length+1);this.images.push({name,data:atob(m[2])});this.ops.push(`q ${w} 0 0 ${h} ${x} ${this.h-y-h} cm /${name} Do Q`)} blob(){let objs=[];let add=s=>{objs.push(s);return objs.length};let font=add('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>'); let imgNums=[];this.images.forEach(im=>imgNums.push(add(`<< /Type /XObject /Subtype /Image /Width 800 /Height 600 /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${im.data.length} >>\nstream\n${im.data}\nendstream`))); let pageNums=[],contentNums=[]; this.pages.forEach((ops)=>{let content=ops.join('\n');contentNums.push(add(`<< /Length ${content.length} >>\nstream\n${content}\nendstream`));pageNums.push(0)}); let pagesNum=objs.length+this.pages.length+1; this.pages.forEach((ops,i)=>{let xobj=this.images.map((im,j)=>`/${im.name} ${imgNums[j]} 0 R`).join(' '); pageNums[i]=add(`<< /Type /Page /Parent ${pagesNum} 0 R /MediaBox [0 0 ${this.w} ${this.h}] /Resources << /Font << /F1 ${font} 0 R >> /XObject << ${xobj} >> >> /Contents ${contentNums[i]} 0 R >>`)}); add(`<< /Type /Pages /Kids [${pageNums.map(n=>n+' 0 R').join(' ')}] /Count ${pageNums.length} >>`); let cat=add(`<< /Type /Catalog /Pages ${pagesNum} 0 R >>`); let out='%PDF-1.4\n',ofs=[0];objs.forEach((o,i)=>{ofs.push(out.length);out+=`${i+1} 0 obj\n${o}\nendobj\n`});let xref=out.length;out+=`xref\n0 ${objs.length+1}\n0000000000 65535 f \n`+ofs.slice(1).map(o=>String(o).padStart(10,'0')+' 00000 n ').join('\n')+`\ntrailer << /Size ${objs.length+1} /Root ${cat} 0 R >>\nstartxref\n${xref}\n%%EOF`;return new Blob([out],{type:'application/pdf'})}}
+function title(pdf,t){pdf.text(40,35,t,18);pdf.text(40,55,$('projectName').value,12);pdf.text(360,55,new Date().toLocaleString('pt-BR'),10)}
+function addAss(pdf,y=700){let sig=$('signature').toDataURL('image/jpeg',0.85);pdf.text(40,y,'Assinatura digital:',11);pdf.image(sig,40,y+10,220,70);pdf.text(40,y+92,`${$('responsavel').value||'Responsável'} - ${$('cargo').value||'Cargo'}`,10)}
+async function pdfPrancha(){let pdf=new PDF().addPage();title(pdf,'PRANCHA DO PROJETO GPS');pdf.text(40,80,`Responsável: ${$('responsavel').value} | Cargo: ${$('cargo').value}`,10);pdf.rect(35,95,525,430); let c=$('map'),img=c.toDataURL('image/jpeg',0.9);pdf.image(img,55,110,485,285);pdf.text(55,415,'Legenda: MT tracejada vermelha | BT contínua azul | poste existente preto | poste novo branco',10);let y=445; pdf.text(40,y,'Resumo dos pontos:',12);y+=18; pontos.slice(0,16).forEach((p,i)=>{pdf.text(45,y,`${i+1}. ${p.nome} ${p.rede} ${p.estrutura} ${p.equip} ${posText(p)} Trecho:${i?hav(pontos[i-1],p).toFixed(1):0}m`,8);y+=14});pdf.text(40,675,`Distância total: ${total().toFixed(1)} m`,12);addAss(pdf,710); await saveBlob('prancha_projeto.pdf',pdf.blob())}
+async function pdfMemorial(){let pdf=new PDF().addPage();title(pdf,'MEMORIAL DESCRITIVO');let y=85;['Projeto GPS com levantamento de rede de distribuição.','Inclui distância entre postes, distância acumulada, tipo de rede, cabos, estruturas Equatorial, equipamentos e coordenadas GPS.',`Distância total: ${total().toFixed(1)} m`,`Responsável: ${$('responsavel').value} - ${$('cargo').value}`].forEach(t=>{pdf.text(40,y,t,11);y+=18});y+=10;pontos.forEach((p,i)=>{if(y>780){pdf.addPage();title(pdf,'MEMORIAL DESCRITIVO');y=80} pdf.text(40,y,`${i+1}) ${p.nome} - ${p.rede} - ${p.estrutura} - ${p.poste} - ${p.equip}`,10);y+=13;pdf.text(55,y,`Cabo: ${p.rede==='MT'?p.caboMT:p.caboBT} | Coord.: ${posText(p)} | Trecho: ${i?hav(pontos[i-1],p).toFixed(1):0} m`,9);y+=18});addAss(pdf,710);await saveBlob('memorial_descritivo.pdf',pdf.blob())}
+async function pdfMateriais(){let pdf=new PDF().addPage();title(pdf,'LISTA DE MATERIAIS');let cont={};pontos.forEach(p=>(mat[p.estrutura]||[]).forEach(m=>cont[m]=(cont[m]||0)+1));let y=85;Object.entries(cont).forEach(([m,q])=>{if(y>790){pdf.addPage();title(pdf,'LISTA DE MATERIAIS');y=80}pdf.text(45,y,`${q} x ${m}`,11);y+=16});y+=15;pdf.text(45,y,'Cabos utilizados:',12);y+=18;[...new Set(pontos.map(p=>p.rede==='MT'?p.caboMT:p.caboBT))].forEach(c=>{pdf.text(55,y,c,10);y+=14});await saveBlob('lista_materiais.pdf',pdf.blob())}
+async function pdfEvidencias(){let pdf=new PDF().addPage();title(pdf,'EVIDÊNCIAS FOTOGRÁFICAS');let y=80;for(const f of fotos){if(y>610){pdf.addPage();title(pdf,'EVIDÊNCIAS FOTOGRÁFICAS');y=80}pdf.text(40,y,`${f.nome} | ${f.data}`,10);y+=14;pdf.text(40,y,`Responsável: ${f.resp||$('responsavel').value} | Coordenadas: ${f.coord||''}`,9);y+=14;pdf.text(40,y,`Comentário: ${f.coment||''}`,9);y+=10; if(f.img.startsWith('data:image/jpeg')) pdf.image(f.img,40,y,230,170); else pdf.text(40,y+20,'Imagem registrada no app (formato não incorporado neste PDF).',10);y+=195}addAss(pdf,700);await saveBlob('evidencias.pdf',pdf.blob())}
+function exportCSV(){let rows=[['nome','lat','lng','rede','estrutura','poste','equipamento','cabo','data','comentario','trecho_m','dist_acumulada_m']];let ac=0;pontos.forEach((p,i)=>{let tr=i?hav(pontos[i-1],p):0;ac+=tr;rows.push([p.nome,p.lat,p.lng,p.rede,p.estrutura,p.poste,p.equip,p.rede==='MT'?p.caboMT:p.caboBT,p.data,p.coment,tr.toFixed(2),ac.toFixed(2)])});saveBlob('projeto_rede.csv',new Blob([rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(';')).join('\n')],{type:'text/csv'}))}
+function exportJSON(){saveBlob('projeto_rede.json',new Blob([JSON.stringify({projeto:$('projectName').value,responsavel:$('responsavel').value,cargo:$('cargo').value,pontos,fotos,total_m:total()},null,2)],{type:'application/json'}))}
+function exportDXF(){let s='0\nSECTION\n2\nENTITIES\n'; for(let i=1;i<pontos.length;i++){let a=pontos[i-1],b=pontos[i];s+=`0\nLINE\n8\n${pontos[i].rede}\n10\n${a.lng}\n20\n${a.lat}\n30\n0\n11\n${b.lng}\n21\n${b.lat}\n31\n0\n`; } pontos.forEach(p=>{s+=`0\nTEXT\n8\nPOSTES\n10\n${p.lng}\n20\n${p.lat}\n40\n0.00005\n1\n${p.nome} ${p.estrutura}\n`}); s+='0\nENDSEC\n0\nEOF';saveBlob('projeto_rede.dxf',new Blob([s],{type:'application/dxf'}))}
+function setupSignature(){let c=$('signature'),ctx=c.getContext('2d'),down=false,last=null;ctx.lineWidth=3;ctx.lineCap='round';function pt(e){let r=c.getBoundingClientRect(),t=e.touches?e.touches[0]:e;return [(t.clientX-r.left)*c.width/r.width,(t.clientY-r.top)*c.height/r.height]}function start(e){down=true;last=pt(e);e.preventDefault()}function move(e){if(!down)return;let p=pt(e);ctx.beginPath();ctx.moveTo(...last);ctx.lineTo(...p);ctx.stroke();last=p;e.preventDefault()}function end(){down=false}c.addEventListener('mousedown',start);c.addEventListener('mousemove',move);addEventListener('mouseup',end);c.addEventListener('touchstart',start,{passive:false});c.addEventListener('touchmove',move,{passive:false});c.addEventListener('touchend',end)}
+function clearSign(){let c=$('signature');c.getContext('2d').clearRect(0,0,c.width,c.height)}
+init();
